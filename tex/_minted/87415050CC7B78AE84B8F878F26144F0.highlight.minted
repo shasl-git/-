@@ -1,0 +1,24 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{c+c1}{// Импортируем общие данные}
+\PYG{n}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{mathNumbers}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{arrayNumbers}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{n}{from}\PYG{+w}{ }\PYG{err}{\PYGZsq{}}\PYG{p}{.}\PYG{o}{/}\PYG{n}{data}\PYG{p}{.}\PYG{n}{js}\PYG{err}{\PYGZsq{}}\PYG{p}{;}
+\PYG{n}{console}\PYG{p}{.}\PYG{n}{time}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}math\PYGZdq{}}\PYG{p}{);}
+\PYG{n}{let}\PYG{+w}{ }\PYG{n}{result}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{k}{for}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{let}\PYG{+w}{ }\PYG{n}{i}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{i}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{mathNumbers}\PYG{p}{.}\PYG{n}{length}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{i}\PYG{o}{++}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{k}{const}\PYG{+w}{ }\PYG{n}{num}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{mathNumbers}\PYG{p}{[}\PYG{n}{i}\PYG{p}{];}
+\PYG{n}{result}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{n}{Math}\PYG{p}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{num}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{Math}\PYG{p}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{num}\PYG{p}{);\PYGZcb{}}
+\PYG{n}{console}\PYG{p}{.}\PYG{n}{timeEnd}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}math\PYGZdq{}}\PYG{p}{);}
+\PYG{n}{console}\PYG{p}{.}\PYG{n}{time}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}array\PYGZdq{}}\PYG{p}{);}
+\PYG{c+c1}{// Создаем копию массива для сортировки}
+\PYG{n}{let}\PYG{+w}{ }\PYG{n}{arr}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[...}\PYG{n}{arrayNumbers}\PYG{p}{];}
+\PYG{n}{arr}\PYG{p}{.}\PYG{n}{sort}\PYG{p}{((}\PYG{n}{a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n}{a}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{);}
+\PYG{n}{console}\PYG{p}{.}\PYG{n}{timeEnd}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}array\PYGZdq{}}\PYG{p}{);}
+\PYG{n}{console}\PYG{p}{.}\PYG{n}{time}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}string\PYGZdq{}}\PYG{p}{);}
+\PYG{n}{let}\PYG{+w}{ }\PYG{n}{str}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}\PYGZdq{}}\PYG{p}{;}
+\PYG{k}{for}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{let}\PYG{+w}{ }\PYG{n}{i}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{i}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{l+m+mi}{100000}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{i}\PYG{o}{++}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{c+c1}{// Используем числа из массива для генерации строки}
+\PYG{n}{str}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{n}{String}\PYG{p}{.}\PYG{n}{fromCharCode}\PYG{p}{(}\PYG{l+m+mi}{97}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{arrayNumbers}\PYG{p}{[}\PYG{n}{i}\PYG{+w}{ }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n}{arrayNumbers}\PYG{p}{.}\PYG{n}{length}\PYG{p}{]}\PYG{+w}{ }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{l+m+mi}{26}\PYG{p}{));\PYGZcb{}}
+\PYG{n}{console}\PYG{p}{.}\PYG{n}{timeEnd}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}string\PYGZdq{}}\PYG{p}{);}
+\PYG{n}{console}\PYG{p}{.}\PYG{n}{log}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Math result:\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{result}\PYG{p}{);}
+\PYG{n}{console}\PYG{p}{.}\PYG{n}{log}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}Sorted array first 10:\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{arr}\PYG{p}{.}\PYG{n}{slice}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{10}\PYG{p}{));}
+\PYG{n}{console}\PYG{p}{.}\PYG{n}{log}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}String length:\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{str}\PYG{p}{.}\PYG{n}{length}\PYG{p}{);}
+\end{MintedVerbatim}

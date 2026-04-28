@@ -1,0 +1,85 @@
+\documentclass[14pt, oneside]{altsu-bachelor}
+
+\title{Разработка веб приложения для аналитики и прогнозирования данных с маркетплейсов}
+\author{В.\,Е.~Шамне}
+\groupnumber{565}
+\GradebookNumber{1337}
+\supervisor{И.\,А.~Шмаков}
+\supervisordegree{к.ф.-м.н., стр. преп.}
+\ministry{Министерство науки и высшего образования}
+\country{Российской Федерации}
+\fulluniversityname{ФГБОУ ВО Алтайский государственный университет}
+\institute{Институт цифровых технологий, электроники и физики}
+\department{Кафедра вычислительной техники и электроники}
+\departmentchief{В.\,В.~Пашнев}
+\departmentchiefdegree{к.ф.-м.н., доцент}
+\shortdepartment{ВТиЭ}
+\ChairmanOfTheStateCertificationCommission{С.\,П.~Пронин}
+\ChairmanOfTheStateCertificationCommissiondegree{д.т.н., проф.}
+\NormController{А.\,В.~Калачёв}
+\NormControllerdegree{к.ф.-м.н., доцент}
+\Consultant{}
+\Consultantdegree{}
+\UDC{004.94}
+\docname{БР 09.03.01}
+\abstractRU{Предмет исследования – Совокупность методов, алгоритмов и программных решений для автоматизированного анализа данных о продажах и остатках товаров на маркетплейсах с использованием данных, полученных API методом, а также средств аутентификации и авторизации пользователей.
+Изучить технологии и создать защищённое веб-приложение, которое:
+
+1.	Получает отчёты через API методы маркетплейсов;
+
+2.	Превращает сырые данные в структурированные наглядные показатели;
+
+3.	Обеспечивает разграничение доступа между пользователями;
+
+4.	Сохраняет данные о пользователях и их настройках.
+
+Проект представляет собой аналитическую платформу для продавцов маркетплейсов, которая автоматизирует обработку данных, предоставляя комплексный анализ по продажам, остаткам, выручке и распределению по кластерам.
+}
+\abstractEN{Большой текст на английском!}
+\keysRU{ВЕБ-ПРИЛОЖЕНИЕ АНАЛИТИКИ, ПРОГНОЗИРОВАНИЕ ОСТАТКОВ, КЛАСТЕРНЫЙ АНАЛИЗ, ОБРАБОТКА ДАННЫХ API ОТЧЕТОВ CSV/XLSX, ВИЗУАЛИЗАЦИЯ АНАЛИТИЧЕСКИХ ДАННЫХ, АВТОРИЗАЦИЯ ПОЛЬЗОВАТЕЛЕЙ, БЕЗОПАСНОСТЬ ДАННЫХ}
+\keysEN{computer simulation, distributed version control}
+\countWorkPage{XXXXX}
+\countWorkImg{XXXXX}
+\countWorkLit{XXXXX}
+\countWorkTab{XXXXX}
+
+\date{\the\year}
+
+% Подключение файлов с библиотекой.
+\addbibresource{graduate-students.bib}
+
+\begin{document}
+\maketitle
+
+\setcounter{page}{2}
+\makeabstract
+\tableofcontents
+
+\input{chapter-intro-csae} %введение
+\input{chapter-1-csae} %главы
+\input{chapter-2-csae}
+\input{chapter-3-csae}
+
+\chapter*{ЗАКЛЮЧЕНИЕ}
+\addcontentsline{toc}{chapter}{ЗАКЛЮЧЕНИЕ}
+
+\begin{enumerate}
+\item Пример ссылки на литературу~\cite{bookexample}.
+\item Пример ссылки на литературу~\cite{book1author,book5author}.
+\item Пример ссылки на литературу~\cite{book5author}.
+\item Пример ссылки на литературу~\cite{wikiRUBitbucket}.
+\item Пример ссылки на литературу~\cite{wikiRUGitHub}.
+\item Пример ссылки на литературу~\cite{wikiRUIdSoftware}.
+\item Пример ссылки на литературу~\cite{wikiRUBitbucket,wikiRUGitHub,wikiRUIdSoftware}.
+\end{enumerate}
+
+Всего рисунков в документе~\totalfigures.
+\newpage
+\addcontentsline{toc}{chapter}{СПИСОК ИСПОЛЬЗОВАННОЙ ЛИТЕРАТУРЫ}
+\printbibliography[title={СПИСОК ИСПОЛЬЗОВАННОЙ ЛИТЕРАТУРЫ}]
+
+\input{chapter-appendix-csae}
+
+\makelastpage
+\end{document}
+

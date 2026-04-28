@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{c+c1}{// data.js \PYGZhy{} общие входные данные}
+\PYG{n}{export}\PYG{+w}{ }\PYG{k}{const}\PYG{+w}{ }\PYG{n}{mathNumbers}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Array}\PYG{p}{.}\PYG{n}{from}\PYG{p}{(\PYGZob{}}\PYG{+w}{ }\PYG{n}{length}\PYG{o}{:}\PYG{+w}{ }\PYG{l+m+mi}{1000000}\PYG{+w}{ }\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{i}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n}{i}\PYG{p}{);}
+\PYG{n}{export}\PYG{+w}{ }\PYG{k}{const}\PYG{+w}{ }\PYG{n}{arrayNumbers}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Array}\PYG{p}{.}\PYG{n}{from}\PYG{p}{(\PYGZob{}}\PYG{+w}{ }\PYG{n}{length}\PYG{o}{:}\PYG{+w}{ }\PYG{l+m+mi}{100000}\PYG{+w}{ }\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{i}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=\PYGZgt{}}
+\PYG{n}{Math}\PYG{p}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{i}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{l+m+mi}{1000}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{Math}\PYG{p}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{i}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{l+m+mf}{0.5}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{l+m+mi}{500}\PYG{p}{);}
+\end{MintedVerbatim}
