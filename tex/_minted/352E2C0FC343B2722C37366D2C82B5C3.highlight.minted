@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{n}{response}\PYG{p}{.}\PYG{n}{cookies}\PYG{p}{.}\PYG{n}{set}\PYG{p}{(\PYGZob{}}
+\PYG{+w}{  }\PYG{n+nl}{name}\PYG{p}{:}\PYG{+w}{ }\PYG{err}{\PYGZsq{}}\PYG{n}{session}\PYG{err}{\PYGZsq{}}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nl}{value}\PYG{p}{:}\PYG{+w}{ }\PYG{n}{token}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nl}{httpOnly}\PYG{p}{:}\PYG{+w}{ }\PYG{n+nb}{true}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nl}{path}\PYG{p}{:}\PYG{+w}{ }\PYG{l+s+sc}{\PYGZsq{}/\PYGZsq{}}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nl}{maxAge}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{60}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{l+m+mi}{60}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{l+m+mi}{24}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{l+m+mi}{7}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nl}{sameSite}\PYG{p}{:}\PYG{+w}{ }\PYG{err}{\PYGZsq{}}\PYG{n}{lax}\PYG{err}{\PYGZsq{}}\PYG{p}{,}
+\PYG{p}{\PYGZcb{});}
+\end{MintedVerbatim}

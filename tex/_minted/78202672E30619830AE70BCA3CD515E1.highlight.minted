@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{n}{response}\PYG{p}{.}\PYG{n}{cookies}\PYG{p}{.}\PYG{n}{delete}\PYG{p}{(}\PYG{err}{\PYGZsq{}}\PYG{n}{session}\PYG{err}{\PYGZsq{}}\PYG{p}{);}
+\PYG{k}{return}\PYG{+w}{ }\PYG{n}{NextResponse}\PYG{p}{.}\PYG{n}{redirect}\PYG{p}{(}\PYG{n}{new}\PYG{+w}{ }\PYG{n}{URL}\PYG{p}{(}\PYG{err}{\PYGZsq{}}\PYG{o}{/}\PYG{n}{login}\PYG{err}{\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{request}\PYG{p}{.}\PYG{n}{url}\PYG{p}{));}
+\end{MintedVerbatim}

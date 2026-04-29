@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k}{const}\PYG{+w}{ }\PYG{n}{response}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{await}\PYG{+w}{ }\PYG{n}{fetch}\PYG{p}{(}\PYG{n}{fileUrl}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nl}{agent}\PYG{p}{:}\PYG{+w}{ }\PYG{n}{new}\PYG{+w}{ }\PYG{n}{https}\PYG{p}{.}\PYG{n}{Agent}\PYG{p}{(\PYGZob{}}\PYG{+w}{ }\PYG{n}{keepAlive}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nb}{true}\PYG{+w}{ }\PYG{p}{\PYGZcb{})}
+\PYG{p}{\PYGZcb{});}
+
+\PYG{k}{const}\PYG{+w}{ }\PYG{n}{buffer}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{await}\PYG{+w}{ }\PYG{n}{response}\PYG{p}{.}\PYG{n}{buffer}\PYG{p}{();}
+\PYG{n}{fs}\PYG{p}{.}\PYG{n}{writeFileSync}\PYG{p}{(}\PYG{n}{filePath}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{buffer}\PYG{p}{);}
+
+\end{MintedVerbatim}

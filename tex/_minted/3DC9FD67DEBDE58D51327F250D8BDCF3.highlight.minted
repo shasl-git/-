@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{n}{try}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n}{content}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{buffer}\PYG{p}{.}\PYG{n}{toString}\PYG{p}{(}\PYG{err}{\PYGZsq{}}\PYG{n}{utf8}\PYG{err}{\PYGZsq{}}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{n}{catch}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n}{content}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{iconv}\PYG{p}{.}\PYG{n}{decode}\PYG{p}{(}\PYG{n}{buffer}\PYG{p}{,}\PYG{+w}{ }\PYG{err}{\PYGZsq{}}\PYG{n}{win1251}\PYG{err}{\PYGZsq{}}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

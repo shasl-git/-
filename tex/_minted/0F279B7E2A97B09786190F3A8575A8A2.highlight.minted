@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k}{const}\PYG{+w}{ }\PYG{n}{salt}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{await}\PYG{+w}{ }\PYG{n}{bcrypt}\PYG{p}{.}\PYG{n}{genSalt}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{);}
+\PYG{k}{const}\PYG{+w}{ }\PYG{n}{passwordHash}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{await}\PYG{+w}{ }\PYG{n}{bcrypt}\PYG{p}{.}\PYG{n}{hash}\PYG{p}{(}\PYG{n}{password}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{salt}\PYG{p}{);}
+\end{MintedVerbatim}

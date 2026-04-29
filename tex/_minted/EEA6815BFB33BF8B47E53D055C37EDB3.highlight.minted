@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k}{const}\PYG{+w}{ }\PYG{n}{isValid}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{await}\PYG{+w}{ }\PYG{n}{bcrypt}\PYG{p}{.}\PYG{n}{compare}\PYG{p}{(}\PYG{n}{password}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{user}\PYG{p}{.}\PYG{n}{password\PYGZus{}hash}\PYG{p}{);}
+\end{MintedVerbatim}

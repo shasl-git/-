@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k}{for}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{let}\PYG{+w}{ }\PYG{n}{i}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{i}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{l+m+mi}{30}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{i}\PYG{o}{++}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{const}\PYG{+w}{ }\PYG{n}{response}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{await}\PYG{+w}{ }\PYG{n}{fetch}\PYG{p}{(}\PYG{err}{\PYGZsq{}}\PYG{n}{https}\PYG{o}{:}\PYG{c+c1}{//api\PYGZhy{}seller.ozon.ru/v1/report/info\PYGZsq{}, \PYGZob{}}
+\PYG{+w}{        }\PYG{n+nl}{method}\PYG{p}{:}\PYG{+w}{ }\PYG{err}{\PYGZsq{}}\PYG{n}{POST}\PYG{err}{\PYGZsq{}}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n+nl}{headers}\PYG{p}{:}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{p}{...}\PYG{+w}{ }\PYG{p}{\PYGZcb{},}
+\PYG{+w}{        }\PYG{n+nl}{body}\PYG{p}{:}\PYG{+w}{ }\PYG{n}{JSON}\PYG{p}{.}\PYG{n}{stringify}\PYG{p}{(\PYGZob{}}\PYG{+w}{ }\PYG{n}{code}\PYG{+w}{ }\PYG{p}{\PYGZcb{})}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{});}
+
+\PYG{+w}{    }\PYG{k}{const}\PYG{+w}{ }\PYG{n}{data}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{await}\PYG{+w}{ }\PYG{n}{response}\PYG{p}{.}\PYG{n}{json}\PYG{p}{();}
+\PYG{+w}{    }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{data}\PYG{p}{.}\PYG{n}{result}\PYG{p}{.}\PYG{n}{status}\PYG{+w}{ }\PYG{o}{===}\PYG{+w}{ }\PYG{err}{\PYGZsq{}}\PYG{n}{success}\PYG{err}{\PYGZsq{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{data}\PYG{p}{.}\PYG{n}{result}\PYG{p}{;}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n}{await}\PYG{+w}{ }\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

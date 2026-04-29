@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k}{const}\PYG{+w}{ }\PYG{n}{payload}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{userId}\PYG{o}{:}\PYG{+w}{ }\PYG{n}{user}\PYG{p}{.}\PYG{n}{id}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{email}\PYG{o}{:}\PYG{+w}{ }\PYG{n}{user}\PYG{p}{.}\PYG{n}{email}\PYG{+w}{ }\PYG{p}{\PYGZcb{};}
+\PYG{k}{const}\PYG{+w}{ }\PYG{n}{token}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{jwt}\PYG{p}{.}\PYG{n}{sign}\PYG{p}{(}\PYG{n}{payload}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{process}\PYG{p}{.}\PYG{n}{env}\PYG{p}{.}\PYG{n}{JWT\PYGZus{}SECRET}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{expiresIn}\PYG{o}{:}\PYG{+w}{ }\PYG{err}{\PYGZsq{}}\PYG{l+m+mi}{7}\PYG{n}{d}\PYG{err}{\PYGZsq{}}\PYG{+w}{ }\PYG{p}{\PYGZcb{});}
+\end{MintedVerbatim}
