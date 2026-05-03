@@ -10,9 +10,9 @@
 \contentsline {section}{\numberline {1.7.}Выбор способа получения данных из маркетплейса.}{17}{section.1.7}%
 \contentsline {subsection}{\numberline {1.7.1.}API отчеты}{18}{subsection.1.7.1}%
 \contentsline {subsection}{\numberline {1.7.2.}Файловые отчеты}{18}{subsection.1.7.2}%
-\contentsline {section}{\numberline {1.8.}Использование API}{19}{section.1.8}%
+\contentsline {section}{\numberline {1.8.}Использование API}{20}{section.1.8}%
 \contentsline {section}{\numberline {1.9.}Аутентификация и авторизация пользователей в веб-приложениях}{21}{section.1.9}%
-\contentsline {subsection}{\numberline {1.9.1.}Одной из главных угроз безопасности веб-приложений является хищение и взлом баз данных с учётными записями пользователей. Хранение паролей в открытом виде недопустимо, так как при утечке базы данных злоумышленник получает полный доступ к аккаунтам всех пользователей. Для защиты паролей применяются два основных подхода: шифрование и хеширование.}{22}{subsection.1.9.1}%
+\contentsline {subsection}{\numberline {1.9.1.}Методы хранения паролей: хеширование и шифрование}{22}{subsection.1.9.1}%
 \contentsline {subsection}{\numberline {1.9.2.}Управление сессиями: JWT и HTTP-only cookies}{23}{subsection.1.9.2}%
 \contentsline {subsection}{\numberline {1.9.3.}Защита маршрутов: proxy (middleware)}{24}{subsection.1.9.3}%
 \contentsline {section}{\numberline {1.10.}Хранение учётных записей}{25}{section.1.10}%
@@ -37,9 +37,9 @@
 \contentsline {section}{\numberline {2.6.}Обработка ошибок и исключений}{37}{section.2.6}%
 \contentsline {section}{\numberline {2.7.}Анализ структуры входных данных}{38}{section.2.7}%
 \contentsline {subsection}{\numberline {2.7.1.}Отчет о продажах (CSV) }{38}{subsection.2.7.1}%
-\contentsline {subsection}{\numberline {2.7.2.}Отчёт об остатках по кластерам (XLSX)}{38}{subsection.2.7.2}%
+\contentsline {subsection}{\numberline {2.7.2.}Отчёт об остатках по кластерам (XLSX)}{39}{subsection.2.7.2}%
 \contentsline {section}{\numberline {2.8.}Проектирование системы обработки данных}{39}{section.2.8}%
-\contentsline {subsection}{\numberline {2.8.1.}Алгоритм парсинга и нормализации данных}{40}{subsection.2.8.1}%
+\contentsline {subsection}{\numberline {2.8.1.}Алгоритм парсинга и нормализации данных}{39}{subsection.2.8.1}%
 \contentsline {subsection}{\numberline {2.8.2.}Алгоритм валидации данных}{41}{subsection.2.8.2}%
 \contentsline {section}{\numberline {2.9.}Авторизация пользователей}{41}{section.2.9}%
 \contentsline {subsection}{\numberline {2.9.1.}Регистрация и вход пользователей}{42}{subsection.2.9.1}%
@@ -71,13 +71,18 @@
 \contentsline {subsection}{\numberline {3.4.2.}Проверка и фильтрация статусов}{64}{subsection.3.4.2}%
 \contentsline {subsection}{\numberline {3.4.3.}Валидация числовых полей}{65}{subsection.3.4.3}%
 \contentsline {subsection}{\numberline {3.4.4.}Обработка формата даты}{66}{subsection.3.4.4}%
-\contentsline {subsection}{\numberline {3.4.5.}Обработка ошибок при парсинге}{66}{subsection.3.4.5}%
+\contentsline {subsection}{\numberline {3.4.5.}Обработка ошибок при парсинге}{67}{subsection.3.4.5}%
 \contentsline {subsection}{\numberline {3.4.6.}Производительность парсинга}{67}{subsection.3.4.6}%
-\contentsline {section}{\numberline {3.5.}Первый раздел главы 1}{67}{section.3.5}%
-\contentsline {subsection}{\numberline {3.5.1.}Пример под раздела}{67}{subsection.3.5.1}%
-\contentsline {section}{\numberline {3.6.}Второй раздел главы 1}{69}{section.3.6}%
-\contentsline {subsection}{\numberline {3.6.1.}Пример подраздела}{69}{subsection.3.6.1}%
-\contentsline {chapter}{ЗАКЛЮЧЕНИЕ}{72}{chapter*.55}%
-\contentsline {chapter}{СПИСОК ИСПОЛЬЗОВАННОЙ ЛИТЕРАТУРЫ}{73}{Item.98}%
-\contentsline {chapter}{ПРИЛОЖЕНИЕ}{74}{section*.57}%
+\contentsline {section}{\numberline {3.5.}Стресс-тестирование и обработка ошибок}{68}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1.}Тестирование обработки неверных форматов файлов}{68}{subsection.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2.}Тестирование обработки некорректных данных внутри файла}{71}{subsection.3.5.2}%
+\contentsline {subsection}{\numberline {3.5.3.}Тестирование обработки ошибок API}{73}{subsection.3.5.3}%
+\contentsline {subsection}{\numberline {3.5.4.}Результаты стресс-тестирования}{75}{subsection.3.5.4}%
+\contentsline {section}{\numberline {3.6.}Тестирование безопасности}{75}{section.3.6}%
+\contentsline {subsection}{\numberline {3.6.1.}XSS-атаки (Cross-Site Scripting)}{75}{subsection.3.6.1}%
+\contentsline {subsection}{\numberline {3.6.2.}Тестирование безопасности сессий (JWT, cookies)}{77}{subsection.3.6.2}%
+\contentsline {subsection}{\numberline {3.6.3.}Результаты тестирования безопасности}{78}{subsection.3.6.3}%
+\contentsline {chapter}{ЗАКЛЮЧЕНИЕ}{80}{chapter*.70}%
+\contentsline {chapter}{СПИСОК ИСПОЛЬЗОВАННОЙ ЛИТЕРАТУРЫ}{81}{Item.91}%
+\contentsline {chapter}{ПРИЛОЖЕНИЕ}{82}{section*.72}%
 \contentsfinish 
