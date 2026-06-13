@@ -8,52 +8,42 @@
 \end{center}
 
 \begin{code}
-\captionof{listing}{\centering\label{code:pi-example}Компонент страницы аутентификации}
-\label{code:testTS}
-\vspace{-0.75cm}\begin{minted}[mathescape,linenos,frame=lines,breaklines]{JS}
+\captionof*{listing}{\centering\label{code:auth-01}Компонент страницы аутентификации}
+\vspace{-0.75cm}\begin{minted}[fontsize=\tiny]{JS}
 // app/login/page.tsx
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         setError(data.error || 'Ошибка при входе');
         setLoading(false);
         return;
       }
-
       router.push('/');
       router.refresh();
-      
     } catch (err) {
       setError('Ошибка сети. Попробуйте позже.');
       setLoading(false);
     }
   };
-
   return (
     <div>
       <div>
@@ -64,14 +54,12 @@ export default function LoginPage() {
               <Link href="/register">зарегистрируйтесь</Link>
             </p>
           </div>
-          
           <form onSubmit={handleSubmit}>
             {error && (
               <div>
                 {error}
               </div>
             )}
-            
             <div>
               <label htmlFor="email">Email</label>
               <input
@@ -82,7 +70,6 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            
             <div>
               <label htmlFor="password">Пароль</label>
               <input
@@ -93,7 +80,6 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            
             <button
               type="submit"
               disabled={loading}
@@ -110,15 +96,12 @@ export default function LoginPage() {
 \end{code}
 
 \begin{code}
-\captionof{listing}{Компонент страницы класстерного анализа}
-\label{code:testTS}
-\vspace{-0.75cm}\begin{minted}[mathescape,linenos,frame=lines,breaklines]{JS}
+\captionof*{listing}{\centering\label{code:cluster-01}Компонент страницы класстерного анализа}
+\vspace{-0.75cm}\begin{minted}[fontsize=\tiny]{JS}
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import * as XLSX from "xlsx";
-
 interface ClusterProductData {
   cluster: string;
   productName: string;
@@ -130,7 +113,6 @@ interface ClusterProductData {
   dailySales28Days: number;
   liquidityStatus: string;
 }
-
 interface ClusterAnalysisData {
   clusters: string[];
   products: string[];
@@ -148,11 +130,9 @@ interface ClusterAnalysisData {
   };
   rawData: ClusterProductData[];
 }
-
 interface ExpandedCard {
   [productName: string]: boolean;
 }
-
 interface ClusterRecommendation {
   cluster: string;
   dailySales: number;
@@ -160,7 +140,6 @@ interface ClusterRecommendation {
   daysLeft: number;
   recommendation: "срочно поставить" | "требуется поставка" | "поставка не требуется";
 }
-
 export default function OzonClusterAnalysis() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -169,38 +148,29 @@ export default function OzonClusterAnalysis() {
   const [fileName, setFileName] = useState("");
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [expandedCards, setExpandedCards] = useState<ExpandedCard>({});
-
   const stocksTableRef = useRef<HTMLDivElement>(null);
   const liquidityTableRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const stocksTable = stocksTableRef.current;
     const liquidityTable = liquidityTableRef.current;
     if (!stocksTable || !liquidityTable || !analysisData) return;
-
     const handleStocksScroll = () => { liquidityTable.scrollLeft = stocksTable.scrollLeft; };
     const handleLiquidityScroll = () => { stocksTable.scrollLeft = liquidityTable.scrollLeft; };
-
     stocksTable.addEventListener("scroll", handleStocksScroll);
     liquidityTable.addEventListener("scroll", handleLiquidityScroll);
-
     return () => {
       stocksTable.removeEventListener("scroll", handleStocksScroll);
       liquidityTable.removeEventListener("scroll", handleLiquidityScroll);
     };
   }, [analysisData]);
-
   const toggleCardExpansion = (productName: string) => {
     setExpandedCards((prev) => ({ ...prev, [productName]: !prev[productName] }));
   };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     setFileName(file.name);
     setIsLoading(true);
-
     try {
       const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: "array" });
@@ -218,25 +188,20 @@ export default function OzonClusterAnalysis() {
       setIsLoading(false);
     }
   };
-
   const parseClusterSheet = (data: any[][]): ClusterAnalysisData => {
     const clusterProductData: ClusterProductData[] = [];
     const clustersSet = new Set<string>();
     const productsSet = new Set<string>();
-
     if (!data || data.length < 5) {
       return { clusters: [], products: [], data: {}, rawData: [] };
     }
-
     const startRowIndex = 4;
     const clusterIndex = 5, productNameIndex = 1, skuIndex = 2, availableQuantityIndex = 10;
     const preparingForSaleIndex = 11, expiringSoonIndex = 14, returningFromCustomersIndex = 21;
     const dailySalesIndex = 8, liquidityStatusIndex = 6;
-
     for (let i = startRowIndex; i < data.length; i++) {
       const row = data[i];
       if (!row || row.length <= Math.max(clusterIndex, productNameIndex, availableQuantityIndex, preparingForSaleIndex, expiringSoonIndex, returningFromCustomersIndex, dailySalesIndex, liquidityStatusIndex)) continue;
-
       const cluster = String(row[clusterIndex] || "").trim();
       const productName = String(row[productNameIndex] || "").trim();
       const sku = String(row[skuIndex] || "").trim();
@@ -246,25 +211,21 @@ export default function OzonClusterAnalysis() {
       const returningFromCustomers = parseFloat(row[returningFromCustomersIndex]) || 0;
       const dailySales28Days = parseFloat(row[dailySalesIndex]) || 0;
       const liquidityStatus = String(row[liquidityStatusIndex] || "").trim();
-
       if (cluster && productName && !cluster.includes("Нередактируемое") && !productName.includes("Нередактируемое") && !cluster.includes("Кластер")) {
         clusterProductData.push({ cluster, productName, availableQuantity, sku, preparingForSale, expiringSoon, returningFromCustomers, dailySales28Days, liquidityStatus });
         clustersSet.add(cluster);
         productsSet.add(productName);
       }
     }
-
     const clusters = Array.from(clustersSet);
     const products = Array.from(productsSet);
     const groupedData: any = {};
-
     products.forEach(product => {
       groupedData[product] = {};
       clusters.forEach(cluster => {
         groupedData[product][cluster] = { available: 0, preparing: 0, expiring: 0, returning: 0, dailySales: 0, liquidityStatus: "" };
       });
     });
-
     clusterProductData.forEach(item => {
       if (groupedData[item.productName] && groupedData[item.productName][item.cluster]) {
         groupedData[item.productName][item.cluster] = {
@@ -277,10 +238,8 @@ export default function OzonClusterAnalysis() {
         };
       }
     });
-
     return { clusters, products, data: groupedData, rawData: clusterProductData };
   };
-
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => event.preventDefault();
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -295,9 +254,7 @@ export default function OzonClusterAnalysis() {
       }
     }
   };
-
   const triggerFileInput = () => fileInputRef.current?.click();
-
   const calculateProductTotals = (): { [product: string]: number } => {
     if (!analysisData) return {};
     const totals: { [product: string]: number } = {};
@@ -310,7 +267,6 @@ export default function OzonClusterAnalysis() {
     });
     return totals;
   };
-
   const calculateClusterTotals = (): { [cluster: string]: number } => {
     if (!analysisData) return {};
     const totals: { [cluster: string]: number } = {};
@@ -323,7 +279,6 @@ export default function OzonClusterAnalysis() {
     });
     return totals;
   };
-
   const calculateProductDailySalesTotals = (): { [product: string]: number } => {
     if (!analysisData) return {};
     const totals: { [product: string]: number } = {};
@@ -336,7 +291,6 @@ export default function OzonClusterAnalysis() {
     });
     return totals;
   };
-
   const calculateClusterDailySalesTotals = (): { [cluster: string]: number } => {
     if (!analysisData) return {};
     const totals: { [cluster: string]: number } = {};
@@ -349,7 +303,6 @@ export default function OzonClusterAnalysis() {
     });
     return totals;
   };
-
   const calculateProductAdditionalTotals = (): {
     preparingTotals: { [product: string]: number };
     expiringTotals: { [product: string]: number };
@@ -377,7 +330,6 @@ export default function OzonClusterAnalysis() {
     });
     return { preparingTotals, expiringTotals, returningTotals };
   };
-
   const calculateDaysLeftForProduct = (productName: string): number => {
     if (!analysisData) return 0;
     const productTotals = calculateProductTotals();
@@ -387,7 +339,6 @@ export default function OzonClusterAnalysis() {
     if (totalDailySales <= 0) return Infinity;
     return totalQuantity / totalDailySales;
   };
-
   const getProductRecommendation = (productName: string): { text: string; color: string; bgColor: string; borderColor: string } => {
     const daysLeft = calculateDaysLeftForProduct(productName);
     if (daysLeft <= 28) return { text: "срочно поставить", color: "text-red-400", bgColor: "bg-red-500/20", borderColor: "border-red-500/30" };
@@ -395,7 +346,6 @@ export default function OzonClusterAnalysis() {
     if (daysLeft <= 120) return { text: "пока хватает", color: "text-green-400", bgColor: "bg-green-500/20", borderColor: "border-green-500/30" };
     return { text: "избыточно", color: "text-gray-400", bgColor: "bg-gray-500/20", borderColor: "border-gray-500/30" };
   };
-
   const getClusterRecommendations = (productName: string): ClusterRecommendation[] => {
     if (!analysisData) return [];
     return analysisData.clusters.filter(cluster => {
@@ -415,7 +365,6 @@ export default function OzonClusterAnalysis() {
       return { cluster, dailySales, available, daysLeft, recommendation };
     }).sort((a, b) => b.dailySales - a.dailySales);
   };
-
   const getLiquidityColor = (status: string): string => {
     if (!status) return "bg-gray-800/50 border-gray-700";
     const statusLower = status.toLowerCase();
@@ -426,41 +375,33 @@ export default function OzonClusterAnalysis() {
     if (statusLower.includes("без продаж")) return "bg-red-500/20 border-red-500/30";
     return "bg-gray-800/50 border-gray-700";
   };
-
   const getSortedProducts = (): string[] => {
     const totals = calculateProductTotals();
     return analysisData?.products.sort((a, b) => (totals[b] || 0) - (totals[a] || 0)) || [];
   };
-
   const getSortedClusters = (): string[] => {
     const totals = calculateClusterTotals();
     return analysisData?.clusters.sort((a, b) => (totals[b] || 0) - (totals[a] || 0)) || [];
   };
-
   const getProductsSortedBySales = (): string[] => {
     const salesTotals = calculateProductDailySalesTotals();
     return analysisData?.products.sort((a, b) => (salesTotals[b] || 0) - (salesTotals[a] || 0)) || [];
   };
-
   const getClustersWithProductsCount = (): number => {
     if (!analysisData) return 0;
     const clusterTotals = calculateClusterTotals();
     return Object.values(clusterTotals).filter(total => total > 0).length;
   };
-
   const getTotalDailySales = (): number => {
     if (!analysisData) return 0;
     const salesTotals = calculateProductDailySalesTotals();
     return Object.values(salesTotals).reduce((sum, total) => sum + total, 0);
   };
-
   const calculateTableHeight = (): number => 60 + 50 * 5 + 50;
-
   const getProductsToShow = (): string[] => {
     const sortedProducts = getSortedProducts();
     return showAllProducts ? sortedProducts : sortedProducts.slice(0, 3);
   };
-
   return (
     <div>
       <div>
@@ -472,7 +413,6 @@ export default function OzonClusterAnalysis() {
               Назад к Ozon
             </button>
           </div>
-
           <div>
             <div>
               <h1>
@@ -483,7 +423,6 @@ export default function OzonClusterAnalysis() {
               </p>
             </div>
           </div>
-
           <div>
             <h2>Загрузка отчёта по кластерам</h2>
             <div
@@ -512,11 +451,9 @@ export default function OzonClusterAnalysis() {
               </div>
             )}
           </div>
-
           {analysisData && (
             <div>
               <h2>Анализ остатков по кластерам</h2>
-
               <div>
                 <div>
                   <div>{getClustersWithProductsCount()}</div>
@@ -535,7 +472,6 @@ export default function OzonClusterAnalysis() {
                   <div>Среднесуточные продажи</div>
                 </div>
               </div>
-
               <div>
                 <h3>Остатки товаров по кластерам</h3>
                 <div
@@ -588,7 +524,6 @@ export default function OzonClusterAnalysis() {
                   </div>
                 </div>
               </div>
-
               <div>
                 <h3>Анализ ликвидности по кластерам</h3>
                 <div
@@ -639,7 +574,6 @@ export default function OzonClusterAnalysis() {
                   </div>
                 </div>
               </div>
-
               <div>
                 <h4>Легенда статусов ликвидности:</h4>
                 <div>
@@ -650,7 +584,6 @@ export default function OzonClusterAnalysis() {
                   <div><div></div><span>Без продаж / Был без продаж</span></div>
                 </div>
               </div>
-
               <div>
                 <div>
                   <h3>Статистика по товарам с рекомендациями</h3>
@@ -677,7 +610,6 @@ export default function OzonClusterAnalysis() {
                     const daysLeftText = isFinite(daysLeft) ? daysLeft.toFixed(1) : "∞";
                     const clusterRecommendations = getClusterRecommendations(product);
                     const firstRecommendation = clusterRecommendations[0];
-
                     return (
                       <div key={index} style={isExpanded ? { background: "rgba(15, 25, 45, 0.95)" } : {}}>
                         {isExpanded && <div onClick={() => toggleCardExpansion(product)} />}
@@ -689,14 +621,12 @@ export default function OzonClusterAnalysis() {
                               {totalSales > 0 && <div>{totalSales.toFixed(2)} прод./день</div>}
                             </div>
                           </div>
-
                           <div>
                             <div>
                               <span>{productRecommendation.text}</span>
                               <span>{daysLeftText} дней остатка</span>
                             </div>
                           </div>
-
                           <div>
                             <div><span>Кластеров:</span><span>{productClusters.length}</span></div>
                             {totalSales > 0 && <div><span>Среднесуточные продажи:</span><span>{totalSales.toFixed(2)} шт</span></div>}
@@ -704,7 +634,6 @@ export default function OzonClusterAnalysis() {
                             <div><span>Истекает срок годности:</span><span>{expiringTotal} шт</span></div>
                             <div><span>Возвращаются от покупателя:</span><span>{returningTotal} шт</span></div>
                           </div>
-
                           {!isExpanded && firstRecommendation && (
                             <div>
                               <div>Первая рекомендация:</div>
@@ -717,7 +646,6 @@ export default function OzonClusterAnalysis() {
                               </div>
                             </div>
                           )}
-
                           {isExpanded && clusterRecommendations.length > 0 && (
                             <div>
                               <h5>Рекомендации по кластерам:</h5>
@@ -734,7 +662,6 @@ export default function OzonClusterAnalysis() {
                               </div>
                             </div>
                           )}
-
                           <button onClick={() => toggleCardExpansion(product)}>
                             {isExpanded ? "Закрыть" : "Открыть детализацию"}
                           </button>
@@ -746,7 +673,6 @@ export default function OzonClusterAnalysis() {
               </div>
             </div>
           )}
-
           <div>
             <h3>Как получить отчёт по остаткам из Ozon?</h3>
             <ol>
@@ -766,20 +692,16 @@ export default function OzonClusterAnalysis() {
 \end{code}
 
 \begin{code}
-\captionof{listing}{Компонент страницы продаж}
-\label{code:testTS}
-\vspace{-0.75cm}\begin{minted}[mathescape,linenos,frame=lines,breaklines]{JS}
+\captionof*{listing}{\centering\label{code:selling}Компонент страницы продаж}
+\vspace{-0.75cm}\begin{minted}[fontsize=\tiny]{JS}
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-
 interface ProductStats {
   name: string;
   deliveredCount: number;
   deliveredAmount: number;
 }
-
 interface DailyProductStats {
   name: string;
   deliveredCount: number;
@@ -789,7 +711,6 @@ interface DailyProductStats {
   totalCount: number;
   totalAmount: number;
 }
-
 interface DailyStats {
   date: string;
   orderedCount: number;
@@ -802,7 +723,6 @@ interface DailyStats {
   cancelledAmount: number;
   inTransitAmount: number;
 }
-
 interface ProductProfitData {
   productName: string;
   costPrice: number;
@@ -811,7 +731,6 @@ interface ProductProfitData {
   taxPercent: number;
   totalProfit: number;
 }
-
 interface OzonReportData {
   ordersCount: number;
   totalAmount: number;
@@ -822,7 +741,6 @@ interface OzonReportData {
   periodEnd: string;
   dailyStats: DailyStats[];
 }
-
 export default function OzonSalesAnalysis() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -840,7 +758,6 @@ export default function OzonSalesAnalysis() {
     return d.toISOString().split("T")[0];
   });
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split("T")[0]);
-
   useEffect(() => {
     if (reportData && reportData.dailyStats.length > 0) {
       const allProductNames = new Set<string>();
@@ -869,7 +786,6 @@ export default function OzonSalesAnalysis() {
       });
     }
   }, [reportData]);
-
   const calculateProfitForProduct = (productName: string, averagePrice: number) => {
     const profitData = productProfitData.find((p) => p.productName === productName);
     if (!profitData || averagePrice <= 0) return 0;
@@ -880,7 +796,6 @@ export default function OzonSalesAnalysis() {
     const profit = averagePrice - costPrice - logistics - ozonRewardAmount - acquiringAmount - taxAmount;
     return Math.round(profit * 100) / 100;
   };
-
   const calculateTotalProfitForProduct = (productName: string) => {
     if (!reportData || !productProfitData.length) return 0;
     let totalProfit = 0;
@@ -895,7 +810,6 @@ export default function OzonSalesAnalysis() {
     });
     return Math.round(totalProfit * 100) / 100;
   };
-
   useEffect(() => {
     if (productProfitData.length > 0) {
       const updatedData = productProfitData.map((product) => ({
@@ -905,7 +819,6 @@ export default function OzonSalesAnalysis() {
       setProductProfitData(updatedData);
     }
   }, [reportData, productProfitData.map((p) => `${p.productName}-${p.costPrice}-${p.logistics}-${p.ozonRewardPercent}-${p.taxPercent}`).join(",")]);
-
   const downloadReportViaApi = async (type: "fbo" | "fbs") => {
     const clientId = localStorage.getItem("ozon_client_id");
     const apiKey = localStorage.getItem("ozon_api_key");
@@ -947,7 +860,6 @@ export default function OzonSalesAnalysis() {
       setIsApiLoading(null);
     }
   };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -964,14 +876,12 @@ export default function OzonSalesAnalysis() {
       setIsLoading(false);
     }
   };
-
   const formatDate = (date: Date): string => {
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     return `${day}.${month}.${year}`;
   };
-
   const parseOzonCSV = (csvText: string): OzonReportData => {
     const lines = csvText.split("\n").filter((line) => line.trim() !== "");
     const headerLine = lines[0];
@@ -991,7 +901,6 @@ export default function OzonSalesAnalysis() {
     const dailyStatsMap: { [key: string]: DailyStats } = {};
     const dailyProductsMap: { [key: string]: { [productName: string]: DailyProductStats } } = {};
     const allDates: Date[] = [];
-
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(";").map((v) => v.trim().replace(/"/g, ""));
       if (values.length > Math.max(finalQuantityIndex, finalAmountIndex, finalStatusIndex, finalProductNameIndex, finalDateIndex)) {
@@ -1109,7 +1018,6 @@ export default function OzonSalesAnalysis() {
       products, periodStart, periodEnd, dailyStats,
     };
   };
-
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => event.preventDefault();
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -1125,19 +1033,16 @@ export default function OzonSalesAnalysis() {
     }
   };
   const triggerFileInput = () => fileInputRef.current?.click();
-
   const handleProfitDataChange = (productName: string, field: keyof ProductProfitData, value: string) => {
     const numValue = parseFloat(value) || 0;
     setProductProfitData((prev) => prev.map((product) => product.productName === productName ? { ...product, [field]: numValue } : product));
   };
-
   const averageOrderValue = reportData && reportData.ordersCount > 0 ? Math.round(reportData.totalAmount / reportData.ordersCount) : 0;
   const averageDeliveredValue = reportData && reportData.deliveredCount > 0 ? Math.round(reportData.deliveredAmount / reportData.deliveredCount) : 0;
   const deliveryRate = reportData && reportData.ordersCount > 0 ? Math.round((reportData.deliveredCount / reportData.ordersCount) * 100) : 0;
   const cancelledData = reportData ? reportData.dailyStats.reduce((acc, day) => ({ count: acc.count + day.cancelledCount, amount: acc.amount + day.cancelledAmount }), { count: 0, amount: 0 }) : { count: 0, amount: 0 };
   const inTransitData = reportData ? reportData.dailyStats.reduce((acc, day) => ({ count: acc.count + day.inTransitCount, amount: acc.amount + day.inTransitAmount }), { count: 0, amount: 0 }) : { count: 0, amount: 0 };
   const totalProfitForPeriod = productProfitData.reduce((total, product) => total + product.totalProfit, 0);
-
   return (
     <div>
       <div>
@@ -1145,14 +1050,12 @@ export default function OzonSalesAnalysis() {
           <div>
             <button onClick={() => router.push("/ozon")}>Назад к Ozon</button>
           </div>
-
           <div>
             <div>
               <h1>Анализ продаж Ozon</h1>
               <p>Загрузите отчёт в формате CSV или получите его напрямую через API</p>
             </div>
           </div>
-
           <div>
             <h2>Получить отчёт через API Ozon</h2>
             <div>
@@ -1175,11 +1078,9 @@ export default function OzonSalesAnalysis() {
             </div>
             <p>* Для работы через API необходимы сохранённые ключи Ozon</p>
           </div>
-
           <div>
             <button onClick={() => router.push("/ozon/sales/compare")}>Сравнить FBO и FBS поставки</button>
           </div>
-
           <div>
             <h2>Или загрузите готовый отчёт</h2>
             <div onDragOver={handleDragOver} onDrop={handleDrop} onClick={triggerFileInput}>
@@ -1193,7 +1094,6 @@ export default function OzonSalesAnalysis() {
             {fileName && <div><p>Файл загружен: {fileName}</p></div>}
             {isLoading && <div><div></div><p>Обработка файла...</p></div>}
           </div>
-
           {reportData && (
             <div>
               <div>
@@ -1202,7 +1102,6 @@ export default function OzonSalesAnalysis() {
                   <div><p>Период: {reportData.periodStart} — {reportData.periodEnd}</p></div>
                 )}
               </div>
-
               <div>
                 <div>
                   <div><h3>Всего заказов</h3><p>{reportData.ordersCount.toLocaleString()} шт</p><p>{reportData.totalAmount.toLocaleString()} ₽</p></div>
@@ -1217,13 +1116,11 @@ export default function OzonSalesAnalysis() {
                   <div><h3>Заказы в пути</h3><p>{inTransitData.count.toLocaleString()} шт</p><p>{inTransitData.amount.toLocaleString()} ₽</p></div>
                 </div>
               </div>
-
               <div>
                 <div><div>{averageOrderValue.toLocaleString()} ₽</div><div>Средний чек (все заказы)</div></div>
                 <div><div>{averageDeliveredValue.toLocaleString()} ₽</div><div>Средний чек (выкупы)</div></div>
                 <div><div>{deliveryRate}%</div><div>Процент выкупа</div></div>
               </div>
-
               {reportData.products.length > 0 && (
                 <div>
                   <h3>Статистика по товарам (выкупленные)</h3>
@@ -1246,7 +1143,6 @@ export default function OzonSalesAnalysis() {
                   </div>
                 </div>
               )}
-
               <div>
                 <button onClick={() => setShowDailyReport(!showDailyReport)}>
                   {showDailyReport ? "Скрыть отчёт по дням" : "Сформировать отчёт по дням"}
@@ -1255,7 +1151,6 @@ export default function OzonSalesAnalysis() {
                   {showProfitCalculation ? "Скрыть расчёт прибыли" : "Расчёт прибыли"}
                 </button>
               </div>
-
               {showProfitCalculation && productProfitData.length > 0 && (
                 <div>
                   <div><h3>Расчёт прибыли по товарам</h3><div><div>Общая прибыль:</div><div>{totalProfitForPeriod.toFixed(2)} ₽</div></div></div>
@@ -1282,7 +1177,6 @@ export default function OzonSalesAnalysis() {
                   {isFormulaExpanded && <div><p>Прибыль на единицу = Цена - Себестоимость - Логистика - (Цена × Вознаграждение Ozon%) - (Цена × 1% эквайринг) - (Цена × НДС%)</p></div>}
                 </div>
               )}
-
               {showDailyReport && reportData.dailyStats.length > 0 && (
                 <div>
                   <h3>Отчёт по дням</h3>
@@ -1328,7 +1222,6 @@ export default function OzonSalesAnalysis() {
               )}
             </div>
           )}
-
           <div>
             <h3>Как получить отчёт из Ozon?</h3>
             <ol>
@@ -1348,14 +1241,11 @@ export default function OzonSalesAnalysis() {
 \end{code}
 
 \begin{code}
-\captionof{listing}{Компонент страницы юнит экономики}
-\label{code:testTS}
-\vspace{-0.75cm}\begin{minted}[mathescape,linenos,frame=lines,breaklines]{JS}
+\captionof*{listing}{\centering\label{code:test-unit}Компонент страницы юнит экономики}
+\vspace{-0.75cm}\begin{minted}[fontsize=\tiny]{JS}
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-
 type LogisticsCalculation = {
   liters: string;
   index: number;
@@ -1363,10 +1253,8 @@ type LogisticsCalculation = {
   withReception: string;
   total: string;
 };
-
 export default function OzonUnitEconomics() {
   const router = useRouter();
-
   const [exchangeRates, setExchangeRates] = useState({ usd: 0, cny: 0 });
   const [currencyConversion, setCurrencyConversion] = useState({ usdAmount: 0, cnyAmount: 0 });
   const [costData, setCostData] = useState({
@@ -1384,13 +1272,11 @@ export default function OzonUnitEconomics() {
   });
   const [logisticsData, setLogisticsData] = useState({ width: 0, length: 0, height: 0 });
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
-
   const usdInRubles = currencyConversion.usdAmount * exchangeRates.usd;
   const cnyInRubles = currencyConversion.cnyAmount * exchangeRates.cny;
   const totalAdditionalCosts = costData.chinaShipping + costData.russiaShipping + costData.fulfillment + costData.additionalCosts;
   const totalCost = costData.purchaseCost * costData.quantity + totalAdditionalCosts;
   const costPerItem = costData.quantity > 0 ? totalCost / costData.quantity : 0;
-
   const calculateLogistics = (): LogisticsCalculation | null => {
     if (logisticsData.width <= 0 || logisticsData.length <= 0 || logisticsData.height <= 0) return null;
     const liters = (logisticsData.width * logisticsData.length * logisticsData.height) / 1000;
@@ -1426,7 +1312,6 @@ export default function OzonUnitEconomics() {
     const totalLogistics = logisticsWithReception * 1.1;
     return { liters: liters.toFixed(2), index, cost: logisticsCost.toFixed(2), withReception: logisticsWithReception.toFixed(2), total: totalLogistics.toFixed(2) };
   };
-
   const logisticsCalculation = calculateLogistics();
   const logisticsCost = logisticsCalculation ? parseFloat(logisticsCalculation.total) : 0;
   const acquiringAmount = marginData.sellingPrice * 0.01;
@@ -1437,46 +1322,38 @@ export default function OzonUnitEconomics() {
   const margin = marginData.sellingPrice - fullCost;
   const marginPercent = marginData.sellingPrice > 0 ? (margin / marginData.sellingPrice) * 100 : 0;
   const profitabilityPercent = fullCost > 0 ? (margin / fullCost) * 100 : 0;
-
   const validateField = (field: string, value: number) => {
     setValidationErrors(prev => ({ ...prev, [field]: isNaN(value) || value < 0 }));
     return !(isNaN(value) || value < 0);
   };
-
   const handleExchangeRateChange = (currency: "usd" | "cny", value: string) => {
     const numValue = parseFloat(value) || 0;
     setExchangeRates(prev => ({ ...prev, [currency]: numValue }));
     validateField(`${currency}Rate`, numValue);
   };
-
   const handleCurrencyConversionChange = (currency: "usdAmount" | "cnyAmount", value: string) => {
     const numValue = parseFloat(value) || 0;
     setCurrencyConversion(prev => ({ ...prev, [currency]: numValue }));
     validateField(currency, numValue);
   };
-
   const handleCostDataChange = (field: string, value: string) => {
     const numValue = parseFloat(value) || 0;
     setCostData(prev => ({ ...prev, [field]: numValue }));
     validateField(field, numValue);
   };
-
   const handleMarginDataChange = (field: string, value: string) => {
     const numValue = parseFloat(value) || 0;
     setMarginData(prev => ({ ...prev, [field]: numValue }));
     validateField(field, numValue);
   };
-
   const handleLogisticsDataChange = (field: string, value: string) => {
     const numValue = parseFloat(value) || 0;
     setLogisticsData(prev => ({ ...prev, [field]: numValue }));
     validateField(field, numValue);
   };
-
   useEffect(() => {
     setExchangeRates({ usd: 92.5, cny: 12.8 });
   }, []);
-
   return (
     <div>
       <div>
@@ -1484,14 +1361,12 @@ export default function OzonUnitEconomics() {
           <div>
             <button onClick={() => router.push("/ozon")}>Назад к Ozon</button>
           </div>
-
           <div>
             <div>
               <h1>Калькулятор юнит-экономики Ozon</h1>
               <p>Расчёт прибыльности товаров с учётом всех затрат</p>
             </div>
           </div>
-
           <div>
             <h2>Курсы валют к рублю</h2>
             <div>
@@ -1505,7 +1380,6 @@ export default function OzonUnitEconomics() {
               </div>
             </div>
           </div>
-
           <div>
             <h2>Конвертер валют в рубли</h2>
             <div>
@@ -1514,7 +1388,6 @@ export default function OzonUnitEconomics() {
               <div><div>{usdInRubles + cnyInRubles} ₽</div></div>
             </div>
           </div>
-
           <div>
             <h2>Расчёт себестоимости</h2>
             <div>
@@ -1530,7 +1403,6 @@ export default function OzonUnitEconomics() {
               <div><h3>Себестоимость одного товара:</h3><div>{costPerItem.toFixed(2)} ₽</div></div>
             </div>
           </div>
-
           <div>
             <h2>Калькулятор логистики Ozon</h2>
             <p>Введите размеры упаковки в сантиметрах:</p>
@@ -1554,7 +1426,6 @@ export default function OzonUnitEconomics() {
               </div>
             )}
           </div>
-
           <div>
             <h2>Расчёт маржинальности и рентабельности</h2>
             <div>
