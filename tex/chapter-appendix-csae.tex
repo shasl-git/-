@@ -1,0 +1,1600 @@
+\appendix
+\newpage
+\begin{flushright}ПРИЛОЖЕНИЕ\end{flushright}
+\phantomsection\addcontentsline{toc}{chapter}{ПРИЛОЖЕНИЕ}
+
+\begin{center}
+\label{code:appendix}Текст программы
+\end{center}
+
+\begin{code}
+\captionof{listing}{\centering\label{code:pi-example}Компонент страницы аутентификации}
+\label{code:testTS}
+\vspace{-0.75cm}\begin{minted}[mathescape,linenos,frame=lines,breaklines]{JS}
+// app/login/page.tsx
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Ошибка при входе');
+        setLoading(false);
+        return;
+      }
+
+      router.push('/');
+      router.refresh();
+      
+    } catch (err) {
+      setError('Ошибка сети. Попробуйте позже.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div>
+        <div>
+          <div>
+            <h2>Вход</h2>
+            <p>
+              <Link href="/register">зарегистрируйтесь</Link>
+            </p>
+          </div>
+          
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <div>
+                {error}
+              </div>
+            )}
+            
+            <div>
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="password">Пароль</label>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            
+            <button
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? 'Вход...' : 'Войти'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+\end{minted}
+\end{code}
+
+\begin{code}
+\captionof{listing}{Компонент страницы класстерного анализа}
+\label{code:testTS}
+\vspace{-0.75cm}\begin{minted}[mathescape,linenos,frame=lines,breaklines]{JS}
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import * as XLSX from "xlsx";
+
+interface ClusterProductData {
+  cluster: string;
+  productName: string;
+  availableQuantity: number;
+  sku: string;
+  preparingForSale: number;
+  expiringSoon: number;
+  returningFromCustomers: number;
+  dailySales28Days: number;
+  liquidityStatus: string;
+}
+
+interface ClusterAnalysisData {
+  clusters: string[];
+  products: string[];
+  data: {
+    [productName: string]: {
+      [cluster: string]: {
+        available: number;
+        preparing: number;
+        expiring: number;
+        returning: number;
+        dailySales: number;
+        liquidityStatus: string;
+      };
+    };
+  };
+  rawData: ClusterProductData[];
+}
+
+interface ExpandedCard {
+  [productName: string]: boolean;
+}
+
+interface ClusterRecommendation {
+  cluster: string;
+  dailySales: number;
+  available: number;
+  daysLeft: number;
+  recommendation: "срочно поставить" | "требуется поставка" | "поставка не требуется";
+}
+
+export default function OzonClusterAnalysis() {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [analysisData, setAnalysisData] = useState<ClusterAnalysisData | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [showAllProducts, setShowAllProducts] = useState(false);
+  const [expandedCards, setExpandedCards] = useState<ExpandedCard>({});
+
+  const stocksTableRef = useRef<HTMLDivElement>(null);
+  const liquidityTableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const stocksTable = stocksTableRef.current;
+    const liquidityTable = liquidityTableRef.current;
+    if (!stocksTable || !liquidityTable || !analysisData) return;
+
+    const handleStocksScroll = () => { liquidityTable.scrollLeft = stocksTable.scrollLeft; };
+    const handleLiquidityScroll = () => { stocksTable.scrollLeft = liquidityTable.scrollLeft; };
+
+    stocksTable.addEventListener("scroll", handleStocksScroll);
+    liquidityTable.addEventListener("scroll", handleLiquidityScroll);
+
+    return () => {
+      stocksTable.removeEventListener("scroll", handleStocksScroll);
+      liquidityTable.removeEventListener("scroll", handleLiquidityScroll);
+    };
+  }, [analysisData]);
+
+  const toggleCardExpansion = (productName: string) => {
+    setExpandedCards((prev) => ({ ...prev, [productName]: !prev[productName] }));
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setFileName(file.name);
+    setIsLoading(true);
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const sheetName = workbook.SheetNames.find(name => name.toLowerCase().includes("товар-кластер")) || workbook.SheetNames[1];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+      const dataArray = jsonData as any[][];
+      const parsedData = parseClusterSheet(dataArray);
+      setAnalysisData(parsedData);
+      setExpandedCards({});
+    } catch (error) {
+      console.error("Error parsing Excel:", error);
+      alert("Ошибка при обработке файла. Проверьте формат файла.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const parseClusterSheet = (data: any[][]): ClusterAnalysisData => {
+    const clusterProductData: ClusterProductData[] = [];
+    const clustersSet = new Set<string>();
+    const productsSet = new Set<string>();
+
+    if (!data || data.length < 5) {
+      return { clusters: [], products: [], data: {}, rawData: [] };
+    }
+
+    const startRowIndex = 4;
+    const clusterIndex = 5, productNameIndex = 1, skuIndex = 2, availableQuantityIndex = 10;
+    const preparingForSaleIndex = 11, expiringSoonIndex = 14, returningFromCustomersIndex = 21;
+    const dailySalesIndex = 8, liquidityStatusIndex = 6;
+
+    for (let i = startRowIndex; i < data.length; i++) {
+      const row = data[i];
+      if (!row || row.length <= Math.max(clusterIndex, productNameIndex, availableQuantityIndex, preparingForSaleIndex, expiringSoonIndex, returningFromCustomersIndex, dailySalesIndex, liquidityStatusIndex)) continue;
+
+      const cluster = String(row[clusterIndex] || "").trim();
+      const productName = String(row[productNameIndex] || "").trim();
+      const sku = String(row[skuIndex] || "").trim();
+      const availableQuantity = parseFloat(row[availableQuantityIndex]) || 0;
+      const preparingForSale = parseFloat(row[preparingForSaleIndex]) || 0;
+      const expiringSoon = parseFloat(row[expiringSoonIndex]) || 0;
+      const returningFromCustomers = parseFloat(row[returningFromCustomersIndex]) || 0;
+      const dailySales28Days = parseFloat(row[dailySalesIndex]) || 0;
+      const liquidityStatus = String(row[liquidityStatusIndex] || "").trim();
+
+      if (cluster && productName && !cluster.includes("Нередактируемое") && !productName.includes("Нередактируемое") && !cluster.includes("Кластер")) {
+        clusterProductData.push({ cluster, productName, availableQuantity, sku, preparingForSale, expiringSoon, returningFromCustomers, dailySales28Days, liquidityStatus });
+        clustersSet.add(cluster);
+        productsSet.add(productName);
+      }
+    }
+
+    const clusters = Array.from(clustersSet);
+    const products = Array.from(productsSet);
+    const groupedData: any = {};
+
+    products.forEach(product => {
+      groupedData[product] = {};
+      clusters.forEach(cluster => {
+        groupedData[product][cluster] = { available: 0, preparing: 0, expiring: 0, returning: 0, dailySales: 0, liquidityStatus: "" };
+      });
+    });
+
+    clusterProductData.forEach(item => {
+      if (groupedData[item.productName] && groupedData[item.productName][item.cluster]) {
+        groupedData[item.productName][item.cluster] = {
+          available: item.availableQuantity,
+          preparing: item.preparingForSale,
+          expiring: item.expiringSoon,
+          returning: item.returningFromCustomers,
+          dailySales: item.dailySales28Days,
+          liquidityStatus: item.liquidityStatus,
+        };
+      }
+    });
+
+    return { clusters, products, data: groupedData, rawData: clusterProductData };
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => event.preventDefault();
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    if (files.length > 0 && (files[0].name.endsWith(".xlsx") || files[0].name.endsWith(".xls"))) {
+      const input = fileInputRef.current;
+      if (input) {
+        const dt = new DataTransfer();
+        dt.items.add(files[0]);
+        input.files = dt.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+  };
+
+  const triggerFileInput = () => fileInputRef.current?.click();
+
+  const calculateProductTotals = (): { [product: string]: number } => {
+    if (!analysisData) return {};
+    const totals: { [product: string]: number } = {};
+    analysisData.products.forEach(product => {
+      let total = 0;
+      analysisData.clusters.forEach(cluster => {
+        total += analysisData.data[product][cluster]?.available || 0;
+      });
+      totals[product] = total;
+    });
+    return totals;
+  };
+
+  const calculateClusterTotals = (): { [cluster: string]: number } => {
+    if (!analysisData) return {};
+    const totals: { [cluster: string]: number } = {};
+    analysisData.clusters.forEach(cluster => {
+      let total = 0;
+      analysisData.products.forEach(product => {
+        total += analysisData.data[product][cluster]?.available || 0;
+      });
+      totals[cluster] = total;
+    });
+    return totals;
+  };
+
+  const calculateProductDailySalesTotals = (): { [product: string]: number } => {
+    if (!analysisData) return {};
+    const totals: { [product: string]: number } = {};
+    analysisData.products.forEach(product => {
+      let total = 0;
+      analysisData.clusters.forEach(cluster => {
+        total += analysisData.data[product][cluster]?.dailySales || 0;
+      });
+      totals[product] = total;
+    });
+    return totals;
+  };
+
+  const calculateClusterDailySalesTotals = (): { [cluster: string]: number } => {
+    if (!analysisData) return {};
+    const totals: { [cluster: string]: number } = {};
+    analysisData.clusters.forEach(cluster => {
+      let total = 0;
+      analysisData.products.forEach(product => {
+        total += analysisData.data[product][cluster]?.dailySales || 0;
+      });
+      totals[cluster] = total;
+    });
+    return totals;
+  };
+
+  const calculateProductAdditionalTotals = (): {
+    preparingTotals: { [product: string]: number };
+    expiringTotals: { [product: string]: number };
+    returningTotals: { [product: string]: number };
+  } => {
+    if (!analysisData) return { preparingTotals: {}, expiringTotals: {}, returningTotals: {} };
+    const preparingTotals: { [product: string]: number } = {};
+    const expiringTotals: { [product: string]: number } = {};
+    const returningTotals: { [product: string]: number } = {};
+    analysisData.products.forEach(product => {
+      let preparingTotal = 0;
+      let expiringTotal = 0;
+      let returningTotal = 0;
+      analysisData.clusters.forEach(cluster => {
+        const data = analysisData.data[product][cluster];
+        if (data) {
+          preparingTotal += data.preparing || 0;
+          expiringTotal += data.expiring || 0;
+          returningTotal += data.returning || 0;
+        }
+      });
+      preparingTotals[product] = preparingTotal;
+      expiringTotals[product] = expiringTotal;
+      returningTotals[product] = returningTotal;
+    });
+    return { preparingTotals, expiringTotals, returningTotals };
+  };
+
+  const calculateDaysLeftForProduct = (productName: string): number => {
+    if (!analysisData) return 0;
+    const productTotals = calculateProductTotals();
+    const salesTotals = calculateProductDailySalesTotals();
+    const totalQuantity = productTotals[productName] || 0;
+    const totalDailySales = salesTotals[productName] || 0;
+    if (totalDailySales <= 0) return Infinity;
+    return totalQuantity / totalDailySales;
+  };
+
+  const getProductRecommendation = (productName: string): { text: string; color: string; bgColor: string; borderColor: string } => {
+    const daysLeft = calculateDaysLeftForProduct(productName);
+    if (daysLeft <= 28) return { text: "срочно поставить", color: "text-red-400", bgColor: "bg-red-500/20", borderColor: "border-red-500/30" };
+    if (daysLeft <= 56) return { text: "требуется поставить", color: "text-orange-400", bgColor: "bg-orange-500/20", borderColor: "border-orange-500/30" };
+    if (daysLeft <= 120) return { text: "пока хватает", color: "text-green-400", bgColor: "bg-green-500/20", borderColor: "border-green-500/30" };
+    return { text: "избыточно", color: "text-gray-400", bgColor: "bg-gray-500/20", borderColor: "border-gray-500/30" };
+  };
+
+  const getClusterRecommendations = (productName: string): ClusterRecommendation[] => {
+    if (!analysisData) return [];
+    return analysisData.clusters.filter(cluster => {
+      const data = analysisData.data[productName][cluster];
+      return data && (data.available > 0 || data.dailySales > 0);
+    }).map(cluster => {
+      const data = analysisData.data[productName][cluster];
+      const dailySales = data?.dailySales || 0;
+      const available = data?.available || 0;
+      let daysLeft = Infinity;
+      if (dailySales > 0) daysLeft = available / dailySales;
+      else if (available > 0) daysLeft = Infinity;
+      else daysLeft = 0;
+      let recommendation: "срочно поставить" | "требуется поставка" | "поставка не требуется" = "поставка не требуется";
+      if (daysLeft <= 50 || available === 0) recommendation = "срочно поставить";
+      else if (daysLeft <= 120) recommendation = "требуется поставка";
+      return { cluster, dailySales, available, daysLeft, recommendation };
+    }).sort((a, b) => b.dailySales - a.dailySales);
+  };
+
+  const getLiquidityColor = (status: string): string => {
+    if (!status) return "bg-gray-800/50 border-gray-700";
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes("дефицит")) return "bg-emerald-500/20 border-emerald-500/30";
+    if (statusLower.includes("очень популярн")) return "bg-blue-500/20 border-blue-500/30";
+    if (statusLower.includes("популярн") && !statusLower.includes("очень")) return "bg-yellow-500/20 border-yellow-500/30";
+    if (statusLower.includes("избыточн")) return "bg-orange-500/20 border-orange-500/30";
+    if (statusLower.includes("без продаж")) return "bg-red-500/20 border-red-500/30";
+    return "bg-gray-800/50 border-gray-700";
+  };
+
+  const getSortedProducts = (): string[] => {
+    const totals = calculateProductTotals();
+    return analysisData?.products.sort((a, b) => (totals[b] || 0) - (totals[a] || 0)) || [];
+  };
+
+  const getSortedClusters = (): string[] => {
+    const totals = calculateClusterTotals();
+    return analysisData?.clusters.sort((a, b) => (totals[b] || 0) - (totals[a] || 0)) || [];
+  };
+
+  const getProductsSortedBySales = (): string[] => {
+    const salesTotals = calculateProductDailySalesTotals();
+    return analysisData?.products.sort((a, b) => (salesTotals[b] || 0) - (salesTotals[a] || 0)) || [];
+  };
+
+  const getClustersWithProductsCount = (): number => {
+    if (!analysisData) return 0;
+    const clusterTotals = calculateClusterTotals();
+    return Object.values(clusterTotals).filter(total => total > 0).length;
+  };
+
+  const getTotalDailySales = (): number => {
+    if (!analysisData) return 0;
+    const salesTotals = calculateProductDailySalesTotals();
+    return Object.values(salesTotals).reduce((sum, total) => sum + total, 0);
+  };
+
+  const calculateTableHeight = (): number => 60 + 50 * 5 + 50;
+
+  const getProductsToShow = (): string[] => {
+    const sortedProducts = getSortedProducts();
+    return showAllProducts ? sortedProducts : sortedProducts.slice(0, 3);
+  };
+
+  return (
+    <div>
+      <div>
+        <div>
+          <div>
+            <button
+              onClick={() => router.push("/ozon")}
+            >
+              Назад к Ozon
+            </button>
+          </div>
+
+          <div>
+            <div>
+              <h1>
+                Кластерный анализ остатков Ozon
+              </h1>
+              <p>
+                Загрузите отчёт в формате XLSX для анализа остатков товаров по кластерам и получения рекомендаций по пополнению
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h2>Загрузка отчёта по кластерам</h2>
+            <div
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onClick={triggerFileInput}
+            >
+              <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xlsx,.xls" className="hidden" />
+              <div>
+                <p>Нажмите или перетащите файл для загрузки</p>
+                <p>Поддерживается только XLSX формат отчётов Ozon (лист "Товар-кластер")</p>
+                <button>
+                  Выбрать файл
+                </button>
+              </div>
+            </div>
+            {fileName && (
+              <div>
+                <p>Файл загружен: {fileName}</p>
+              </div>
+            )}
+            {isLoading && (
+              <div>
+                <div></div>
+                <p>Обработка файла...</p>
+              </div>
+            )}
+          </div>
+
+          {analysisData && (
+            <div>
+              <h2>Анализ остатков по кластерам</h2>
+
+              <div>
+                <div>
+                  <div>{getClustersWithProductsCount()}</div>
+                  <div>Кластеры с товарами</div>
+                </div>
+                <div>
+                  <div>{analysisData.products.length}</div>
+                  <div>Всего товаров</div>
+                </div>
+                <div>
+                  <div>{analysisData.rawData.reduce((sum, item) => sum + item.availableQuantity, 0)}</div>
+                  <div>Общее количество остатков</div>
+                </div>
+                <div>
+                  <div>{getTotalDailySales().toFixed(2)}</div>
+                  <div>Среднесуточные продажи</div>
+                </div>
+              </div>
+
+              <div>
+                <h3>Остатки товаров по кластерам</h3>
+                <div
+                  ref={stocksTableRef}
+                  style={{ height: `${calculateTableHeight()}px`, overflowY: "auto" }}
+                >
+                  <div>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Товар</th>
+                          {getSortedClusters().map((cluster, idx) => (
+                            <th key={idx}>
+                              <div title={cluster}>{cluster}</div>
+                            </th>
+                          ))}
+                          <th>Всего</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getSortedProducts().map((product, idx) => {
+                          const productTotals = calculateProductTotals();
+                          const total = productTotals[product] || 0;
+                          return (
+                            <tr key={idx}>
+                              <td>
+                                <div title={product}>{product}</div>
+                              </td>
+                              {getSortedClusters().map((cluster, cIdx) => {
+                                const quantity = analysisData.data[product][cluster]?.available || 0;
+                                return <td key={cIdx}>{quantity > 0 ? quantity : "-"}</td>;
+                              })}
+                              <td>{total}</td>
+                            </tr>
+                          );
+                        })}
+                        <tr>
+                          <td>Всего</td>
+                          {getSortedClusters().map((cluster, idx) => {
+                            const clusterTotals = calculateClusterTotals();
+                            const total = clusterTotals[cluster] || 0;
+                            return <td key={idx}>{total}</td>;
+                          })}
+                          <td>
+                            {analysisData.rawData.reduce((sum, item) => sum + item.availableQuantity, 0)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3>Анализ ликвидности по кластерам</h3>
+                <div
+                  ref={liquidityTableRef}
+                  style={{ height: `${calculateTableHeight()}px`, overflowY: "auto" }}
+                >
+                  <div>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Товар</th>
+                          {getSortedClusters().map((cluster, idx) => (
+                            <th key={idx}>
+                              <div title={cluster}>{cluster}</div>
+                            </th>
+                          ))}
+                          <th>Всего продаж/день</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getProductsSortedBySales().map((product, idx) => {
+                          const salesTotals = calculateProductDailySalesTotals();
+                          const totalSales = salesTotals[product] || 0;
+                          return (
+                            <tr key={idx}>
+                              <td>
+                                <div title={product}>{product}</div>
+                              </td>
+                              {getSortedClusters().map((cluster, cIdx) => {
+                                const dailySales = analysisData.data[product][cluster]?.dailySales || 0;
+                                return <td key={cIdx}>{dailySales > 0 ? dailySales.toFixed(2) : "-"}</td>;
+                              })}
+                              <td>{totalSales > 0 ? totalSales.toFixed(2) : "-"}</td>
+                            </tr>
+                          );
+                        })}
+                        <tr>
+                          <td>Всего продаж/день</td>
+                          {getSortedClusters().map((cluster, idx) => {
+                            const clusterSalesTotals = calculateClusterDailySalesTotals();
+                            const total = clusterSalesTotals[cluster] || 0;
+                            return <td key={idx}>{total > 0 ? total.toFixed(2) : "-"}</td>;
+                          })}
+                          <td>{getTotalDailySales().toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4>Легенда статусов ликвидности:</h4>
+                <div>
+                  <div><div></div><span>Дефицитный / Был дефицитный</span></div>
+                  <div><div></div><span>Очень популярный / Был очень популярный</span></div>
+                  <div><div></div><span>Популярный / Был популярный</span></div>
+                  <div><div></div><span>Избыточный / Был избыточный</span></div>
+                  <div><div></div><span>Без продаж / Был без продаж</span></div>
+                </div>
+              </div>
+
+              <div>
+                <div>
+                  <h3>Статистика по товарам с рекомендациями</h3>
+                  {getSortedProducts().length > 3 && (
+                    <button onClick={() => setShowAllProducts(!showAllProducts)}>
+                      {showAllProducts ? "Скрыть" : `Показать все (${getSortedProducts().length})`}
+                    </button>
+                  )}
+                </div>
+                <div>
+                  {getProductsToShow().map((product, index) => {
+                    const totals = calculateProductTotals();
+                    const salesTotals = calculateProductDailySalesTotals();
+                    const additionalTotals = calculateProductAdditionalTotals();
+                    const total = totals[product] || 0;
+                    const totalSales = salesTotals[product] || 0;
+                    const preparingTotal = additionalTotals.preparingTotals[product] || 0;
+                    const expiringTotal = additionalTotals.expiringTotals[product] || 0;
+                    const returningTotal = additionalTotals.returningTotals[product] || 0;
+                    const productClusters = analysisData.clusters.filter(cluster => analysisData.data[product][cluster]?.available > 0);
+                    const isExpanded = expandedCards[product] || false;
+                    const productRecommendation = getProductRecommendation(product);
+                    const daysLeft = calculateDaysLeftForProduct(product);
+                    const daysLeftText = isFinite(daysLeft) ? daysLeft.toFixed(1) : "∞";
+                    const clusterRecommendations = getClusterRecommendations(product);
+                    const firstRecommendation = clusterRecommendations[0];
+
+                    return (
+                      <div key={index} style={isExpanded ? { background: "rgba(15, 25, 45, 0.95)" } : {}}>
+                        {isExpanded && <div onClick={() => toggleCardExpansion(product)} />}
+                        <div>
+                          <div>
+                            <h4>{product}</h4>
+                            <div>
+                              <span>{total} шт</span>
+                              {totalSales > 0 && <div>{totalSales.toFixed(2)} прод./день</div>}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div>
+                              <span>{productRecommendation.text}</span>
+                              <span>{daysLeftText} дней остатка</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <div><span>Кластеров:</span><span>{productClusters.length}</span></div>
+                            {totalSales > 0 && <div><span>Среднесуточные продажи:</span><span>{totalSales.toFixed(2)} шт</span></div>}
+                            <div><span>Готовится к продаже:</span><span>{preparingTotal} шт</span></div>
+                            <div><span>Истекает срок годности:</span><span>{expiringTotal} шт</span></div>
+                            <div><span>Возвращаются от покупателя:</span><span>{returningTotal} шт</span></div>
+                          </div>
+
+                          {!isExpanded && firstRecommendation && (
+                            <div>
+                              <div>Первая рекомендация:</div>
+                              <div>
+                                <div>
+                                  <span>{firstRecommendation.cluster}</span>
+                                  <span>{isFinite(firstRecommendation.daysLeft) ? firstRecommendation.daysLeft.toFixed(1) : "∞"} дней</span>
+                                </div>
+                                <div>Остаток: {firstRecommendation.available} шт | Продажи: {firstRecommendation.dailySales.toFixed(2)}/день</div>
+                              </div>
+                            </div>
+                          )}
+
+                          {isExpanded && clusterRecommendations.length > 0 && (
+                            <div>
+                              <h5>Рекомендации по кластерам:</h5>
+                              <div>
+                                {clusterRecommendations.map((rec, idx) => (
+                                  <div key={idx}>
+                                    <div>
+                                      <span>{rec.cluster}</span>
+                                      <span>{isFinite(rec.daysLeft) ? rec.daysLeft.toFixed(1) : "∞"} дней</span>
+                                    </div>
+                                    <div>Остаток: {rec.available} шт | Продажи: {rec.dailySales.toFixed(2)}/день</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <button onClick={() => toggleCardExpansion(product)}>
+                            {isExpanded ? "Закрыть" : "Открыть детализацию"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h3>Как получить отчёт по остаткам из Ozon?</h3>
+            <ol>
+              <li>Зайдите в личный кабинет продавца Ozon</li>
+              <li>Перейдите в раздел "Аналитика" → "Отчёты"</li>
+              <li>Выберите "Продажи со склада Ozon" → "Управление остатками"</li>
+              <li>Выберите "Все склады" → скачайте отчёт</li>
+              <li>Загрузите отчёт в форму выше</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+\end{minted}
+\end{code}
+
+\begin{code}
+\captionof{listing}{Компонент страницы продаж}
+\label{code:testTS}
+\vspace{-0.75cm}\begin{minted}[mathescape,linenos,frame=lines,breaklines]{JS}
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+
+interface ProductStats {
+  name: string;
+  deliveredCount: number;
+  deliveredAmount: number;
+}
+
+interface DailyProductStats {
+  name: string;
+  deliveredCount: number;
+  deliveredAmount: number;
+  cancelledCount: number;
+  cancelledAmount: number;
+  totalCount: number;
+  totalAmount: number;
+}
+
+interface DailyStats {
+  date: string;
+  orderedCount: number;
+  deliveredCount: number;
+  cancelledCount: number;
+  inTransitCount: number;
+  products: DailyProductStats[];
+  orderedAmount: number;
+  deliveredAmount: number;
+  cancelledAmount: number;
+  inTransitAmount: number;
+}
+
+interface ProductProfitData {
+  productName: string;
+  costPrice: number;
+  logistics: number;
+  ozonRewardPercent: number;
+  taxPercent: number;
+  totalProfit: number;
+}
+
+interface OzonReportData {
+  ordersCount: number;
+  totalAmount: number;
+  deliveredCount: number;
+  deliveredAmount: number;
+  products: ProductStats[];
+  periodStart: string;
+  periodEnd: string;
+  dailyStats: DailyStats[];
+}
+
+export default function OzonSalesAnalysis() {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isApiLoading, setIsApiLoading] = useState<"fbo" | "fbs" | null>(null);
+  const [reportData, setReportData] = useState<OzonReportData | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [isFormulaExpanded, setIsFormulaExpanded] = useState(false);
+  const [showDailyReport, setShowDailyReport] = useState(false);
+  const [showProfitCalculation, setShowProfitCalculation] = useState(false);
+  const [productProfitData, setProductProfitData] = useState<ProductProfitData[]>([]);
+  const [dateFrom, setDateFrom] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split("T")[0];
+  });
+  const [dateTo, setDateTo] = useState(() => new Date().toISOString().split("T")[0]);
+
+  useEffect(() => {
+    if (reportData && reportData.dailyStats.length > 0) {
+      const allProductNames = new Set<string>();
+      reportData.dailyStats.forEach((day) => {
+        day.products.forEach((product) => {
+          allProductNames.add(product.name);
+        });
+      });
+      const initialProfitData: ProductProfitData[] = Array.from(allProductNames).map((productName) => ({
+        productName,
+        costPrice: 0,
+        logistics: 0,
+        ozonRewardPercent: 20,
+        taxPercent: 6,
+        totalProfit: 0,
+      }));
+      setProductProfitData((prev) => {
+        const updatedData = [...initialProfitData];
+        prev.forEach((existingProduct) => {
+          const index = updatedData.findIndex((p) => p.productName === existingProduct.productName);
+          if (index !== -1) {
+            updatedData[index] = { ...existingProduct, totalProfit: 0 };
+          }
+        });
+        return updatedData;
+      });
+    }
+  }, [reportData]);
+
+  const calculateProfitForProduct = (productName: string, averagePrice: number) => {
+    const profitData = productProfitData.find((p) => p.productName === productName);
+    if (!profitData || averagePrice <= 0) return 0;
+    const { costPrice, logistics, ozonRewardPercent, taxPercent } = profitData;
+    const ozonRewardAmount = (averagePrice * ozonRewardPercent) / 100;
+    const acquiringAmount = averagePrice / 100;
+    const taxAmount = (averagePrice * taxPercent) / 100;
+    const profit = averagePrice - costPrice - logistics - ozonRewardAmount - acquiringAmount - taxAmount;
+    return Math.round(profit * 100) / 100;
+  };
+
+  const calculateTotalProfitForProduct = (productName: string) => {
+    if (!reportData || !productProfitData.length) return 0;
+    let totalProfit = 0;
+    reportData.dailyStats.forEach((day) => {
+      day.products.forEach((product) => {
+        if (product.name === productName && product.deliveredCount > 0) {
+          const averagePrice = product.deliveredAmount / product.deliveredCount;
+          const profitPerUnit = calculateProfitForProduct(productName, averagePrice);
+          totalProfit += profitPerUnit * product.deliveredCount;
+        }
+      });
+    });
+    return Math.round(totalProfit * 100) / 100;
+  };
+
+  useEffect(() => {
+    if (productProfitData.length > 0) {
+      const updatedData = productProfitData.map((product) => ({
+        ...product,
+        totalProfit: calculateTotalProfitForProduct(product.productName),
+      }));
+      setProductProfitData(updatedData);
+    }
+  }, [reportData, productProfitData.map((p) => `${p.productName}-${p.costPrice}-${p.logistics}-${p.ozonRewardPercent}-${p.taxPercent}`).join(",")]);
+
+  const downloadReportViaApi = async (type: "fbo" | "fbs") => {
+    const clientId = localStorage.getItem("ozon_client_id");
+    const apiKey = localStorage.getItem("ozon_api_key");
+    if (!clientId || !apiKey) {
+      alert("Сначала настройте API ключи на главной странице Ozon");
+      router.push("/ozon");
+      return;
+    }
+    setIsApiLoading(type);
+    try {
+      const fromDateTime = new Date(dateFrom);
+      fromDateTime.setHours(0, 0, 0, 0);
+      const toDateTime = new Date(dateTo);
+      toDateTime.setHours(23, 59, 59, 999);
+      const response = await fetch("/api/ozon/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fromDate: fromDateTime.toISOString(),
+          toDate: toDateTime.toISOString(),
+          deliverySchema: type,
+          clientId: clientId,
+          apiKey: apiKey,
+        }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Ошибка при получении отчета");
+      }
+      const blob = await response.blob();
+      const text = await blob.text();
+      const parsedData = parseOzonCSV(text);
+      setReportData(parsedData);
+      setFileName(`ozon_${type}_${dateFrom}_${dateTo}.csv`);
+    } catch (error: any) {
+      console.error("API Error:", error);
+      alert(`Ошибка: ${error.message}`);
+    } finally {
+      setIsApiLoading(null);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    setIsLoading(true);
+    try {
+      const text = await file.text();
+      const parsedData = parseOzonCSV(text);
+      setReportData(parsedData);
+    } catch (error) {
+      console.error("Error parsing CSV:", error);
+      alert("Ошибка при обработке файла. Проверьте формат файла.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatDate = (date: Date): string => {
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+
+  const parseOzonCSV = (csvText: string): OzonReportData => {
+    const lines = csvText.split("\n").filter((line) => line.trim() !== "");
+    const headerLine = lines[0];
+    const headers = headerLine.split(";").map((header) => header.trim().replace(/"/g, ""));
+    const quantityIndex = headers.findIndex((h) => h.toLowerCase().includes("количество") || h === "Q");
+    const amountIndex = headers.findIndex((h) => h.toLowerCase().includes("оплачено") || h.toLowerCase().includes("цена") || h === "O");
+    const statusIndex = headers.findIndex((h) => h.toLowerCase().includes("статус") || h === "E");
+    const productNameIndex = headers.findIndex((h) => h.toLowerCase().includes("наименование") || h.toLowerCase().includes("товар") || h === "L");
+    const dateIndex = headers.findIndex((h) => h.toLowerCase().includes("принят") || h.toLowerCase().includes("обработк") || h === "C");
+    const finalQuantityIndex = quantityIndex !== -1 ? quantityIndex : 16;
+    const finalAmountIndex = amountIndex !== -1 ? amountIndex : 15;
+    const finalStatusIndex = statusIndex !== -1 ? statusIndex : 4;
+    const finalProductNameIndex = productNameIndex !== -1 ? productNameIndex : 9;
+    const finalDateIndex = dateIndex !== -1 ? dateIndex : 2;
+    let ordersCount = 0, totalAmount = 0, deliveredCount = 0, deliveredAmount = 0, cancelledCount = 0, cancelledAmount = 0, inTransitCount = 0, inTransitAmount = 0;
+    const productsMap: { [key: string]: ProductStats } = {};
+    const dailyStatsMap: { [key: string]: DailyStats } = {};
+    const dailyProductsMap: { [key: string]: { [productName: string]: DailyProductStats } } = {};
+    const allDates: Date[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(";").map((v) => v.trim().replace(/"/g, ""));
+      if (values.length > Math.max(finalQuantityIndex, finalAmountIndex, finalStatusIndex, finalProductNameIndex, finalDateIndex)) {
+        const quantity = parseFloat(values[finalQuantityIndex]) || 0;
+        const amount = parseFloat(values[finalAmountIndex]) || 0;
+        const status = values[finalStatusIndex] || "";
+        const productName = values[finalProductNameIndex] || "Неизвестный товар";
+        const dateTime = values[finalDateIndex] || "";
+        let dateStr = "";
+        let parsedDate: Date | null = null;
+        if (dateTime) {
+          if (dateTime.includes("-")) {
+            parsedDate = new Date(dateTime.replace(" ", "T"));
+          } else if (dateTime.includes(".")) {
+            const [datePart, timePart] = dateTime.split(" ");
+            const [day, month, year] = datePart.split(".").map(Number);
+            if (timePart) {
+              const [hours, minutes] = timePart.split(":").map(Number);
+              parsedDate = new Date(year, month - 1, day, hours, minutes);
+            } else {
+              parsedDate = new Date(year, month - 1, day);
+            }
+          }
+          if (parsedDate && !isNaN(parsedDate.getTime())) {
+            allDates.push(parsedDate);
+            dateStr = formatDate(parsedDate);
+          }
+        }
+        if (dateStr && !dailyStatsMap[dateStr]) {
+          dailyStatsMap[dateStr] = {
+            date: dateStr, orderedCount: 0, deliveredCount: 0, cancelledCount: 0, inTransitCount: 0,
+            products: [], orderedAmount: 0, deliveredAmount: 0, cancelledAmount: 0, inTransitAmount: 0,
+          };
+        }
+        if (dateStr && !dailyProductsMap[dateStr]) dailyProductsMap[dateStr] = {};
+        ordersCount += quantity;
+        totalAmount += amount;
+        if (dateStr) {
+          dailyStatsMap[dateStr].orderedCount += quantity;
+          dailyStatsMap[dateStr].orderedAmount += amount;
+        }
+        const isDelivered = status.toLowerCase().includes("доставлен");
+        const isCancelled = status.toLowerCase().includes("отмен");
+        const isInTransit = !isDelivered && !isCancelled;
+        if (isDelivered) {
+          deliveredCount += quantity;
+          deliveredAmount += amount;
+          if (dateStr) {
+            dailyStatsMap[dateStr].deliveredCount += quantity;
+            dailyStatsMap[dateStr].deliveredAmount += amount;
+          }
+          if (!productsMap[productName]) productsMap[productName] = { name: productName, deliveredCount: 0, deliveredAmount: 0 };
+          productsMap[productName].deliveredCount += quantity;
+          productsMap[productName].deliveredAmount += amount;
+          if (dateStr) {
+            if (!dailyProductsMap[dateStr][productName]) {
+              dailyProductsMap[dateStr][productName] = {
+                name: productName, deliveredCount: 0, deliveredAmount: 0, cancelledCount: 0, cancelledAmount: 0, totalCount: 0, totalAmount: 0,
+              };
+            }
+            dailyProductsMap[dateStr][productName].deliveredCount += quantity;
+            dailyProductsMap[dateStr][productName].deliveredAmount += amount;
+            dailyProductsMap[dateStr][productName].totalCount += quantity;
+            dailyProductsMap[dateStr][productName].totalAmount += amount;
+          }
+        }
+        if (isCancelled) {
+          cancelledCount += quantity;
+          cancelledAmount += amount;
+          if (dateStr) {
+            dailyStatsMap[dateStr].cancelledCount += quantity;
+            dailyStatsMap[dateStr].cancelledAmount += amount;
+            if (!dailyProductsMap[dateStr][productName]) {
+              dailyProductsMap[dateStr][productName] = {
+                name: productName, deliveredCount: 0, deliveredAmount: 0, cancelledCount: 0, cancelledAmount: 0, totalCount: 0, totalAmount: 0,
+              };
+            }
+            dailyProductsMap[dateStr][productName].cancelledCount += quantity;
+            dailyProductsMap[dateStr][productName].cancelledAmount += amount;
+            dailyProductsMap[dateStr][productName].totalCount += quantity;
+            dailyProductsMap[dateStr][productName].totalAmount += amount;
+          }
+        }
+        if (isInTransit) {
+          inTransitCount += quantity;
+          inTransitAmount += amount;
+          if (dateStr) {
+            dailyStatsMap[dateStr].inTransitCount += quantity;
+            dailyStatsMap[dateStr].inTransitAmount += amount;
+          }
+        }
+      }
+    }
+    for (const dateStr in dailyProductsMap) {
+      const productsArray = Object.values(dailyProductsMap[dateStr]);
+      dailyStatsMap[dateStr].products = productsArray.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    let periodStart = "", periodEnd = "";
+    if (allDates.length > 0) {
+      const sortedDates = [...allDates].sort((a, b) => a.getTime() - b.getTime());
+      periodStart = formatDate(sortedDates[0]);
+      periodEnd = formatDate(sortedDates[sortedDates.length - 1]);
+    }
+    const dailyStats = Object.values(dailyStatsMap).sort((a, b) => {
+      const [dayA, monthA, yearA] = a.date.split(".").map(Number);
+      const [dayB, monthB, yearB] = b.date.split(".").map(Number);
+      const dateA = new Date(yearA, monthA - 1, dayA);
+      const dateB = new Date(yearB, monthB - 1, dayB);
+      return dateB.getTime() - dateA.getTime();
+    });
+    const products = Object.values(productsMap).sort((a, b) => b.deliveredCount - a.deliveredCount).filter((p) => p.deliveredCount > 0);
+    return {
+      ordersCount: Math.round(ordersCount), totalAmount: Math.round(totalAmount),
+      deliveredCount: Math.round(deliveredCount), deliveredAmount: Math.round(deliveredAmount),
+      products, periodStart, periodEnd, dailyStats,
+    };
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => event.preventDefault();
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    if (files.length > 0 && files[0].type === "text/csv") {
+      const input = fileInputRef.current;
+      if (input) {
+        const dt = new DataTransfer();
+        dt.items.add(files[0]);
+        input.files = dt.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+  };
+  const triggerFileInput = () => fileInputRef.current?.click();
+
+  const handleProfitDataChange = (productName: string, field: keyof ProductProfitData, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setProductProfitData((prev) => prev.map((product) => product.productName === productName ? { ...product, [field]: numValue } : product));
+  };
+
+  const averageOrderValue = reportData && reportData.ordersCount > 0 ? Math.round(reportData.totalAmount / reportData.ordersCount) : 0;
+  const averageDeliveredValue = reportData && reportData.deliveredCount > 0 ? Math.round(reportData.deliveredAmount / reportData.deliveredCount) : 0;
+  const deliveryRate = reportData && reportData.ordersCount > 0 ? Math.round((reportData.deliveredCount / reportData.ordersCount) * 100) : 0;
+  const cancelledData = reportData ? reportData.dailyStats.reduce((acc, day) => ({ count: acc.count + day.cancelledCount, amount: acc.amount + day.cancelledAmount }), { count: 0, amount: 0 }) : { count: 0, amount: 0 };
+  const inTransitData = reportData ? reportData.dailyStats.reduce((acc, day) => ({ count: acc.count + day.inTransitCount, amount: acc.amount + day.inTransitAmount }), { count: 0, amount: 0 }) : { count: 0, amount: 0 };
+  const totalProfitForPeriod = productProfitData.reduce((total, product) => total + product.totalProfit, 0);
+
+  return (
+    <div>
+      <div>
+        <div>
+          <div>
+            <button onClick={() => router.push("/ozon")}>Назад к Ozon</button>
+          </div>
+
+          <div>
+            <div>
+              <h1>Анализ продаж Ozon</h1>
+              <p>Загрузите отчёт в формате CSV или получите его напрямую через API</p>
+            </div>
+          </div>
+
+          <div>
+            <h2>Получить отчёт через API Ozon</h2>
+            <div>
+              <div>
+                <label>Дата с</label>
+                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              </div>
+              <div>
+                <label>Дата по</label>
+                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <button onClick={() => downloadReportViaApi("fbo")} disabled={isApiLoading !== null}>
+                {isApiLoading === "fbo" ? "Загрузка..." : "Сформировать FBO отчёт"}
+              </button>
+              <button onClick={() => downloadReportViaApi("fbs")} disabled={isApiLoading !== null}>
+                {isApiLoading === "fbs" ? "Загрузка..." : "Сформировать FBS отчёт"}
+              </button>
+            </div>
+            <p>* Для работы через API необходимы сохранённые ключи Ozon</p>
+          </div>
+
+          <div>
+            <button onClick={() => router.push("/ozon/sales/compare")}>Сравнить FBO и FBS поставки</button>
+          </div>
+
+          <div>
+            <h2>Или загрузите готовый отчёт</h2>
+            <div onDragOver={handleDragOver} onDrop={handleDrop} onClick={triggerFileInput}>
+              <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv" className="hidden" />
+              <div>
+                <p>Нажмите или перетащите файл для загрузки</p>
+                <p>Поддерживается только CSV формат отчётов Ozon</p>
+                <button>Выбрать файл</button>
+              </div>
+            </div>
+            {fileName && <div><p>Файл загружен: {fileName}</p></div>}
+            {isLoading && <div><div></div><p>Обработка файла...</p></div>}
+          </div>
+
+          {reportData && (
+            <div>
+              <div>
+                <h2>Результаты анализа</h2>
+                {reportData.periodStart && reportData.periodEnd && (
+                  <div><p>Период: {reportData.periodStart} — {reportData.periodEnd}</p></div>
+                )}
+              </div>
+
+              <div>
+                <div>
+                  <div><h3>Всего заказов</h3><p>{reportData.ordersCount.toLocaleString()} шт</p><p>{reportData.totalAmount.toLocaleString()} ₽</p></div>
+                </div>
+                <div>
+                  <div><h3>Выкупленные заказы</h3><p>{reportData.deliveredCount.toLocaleString()} шт</p><p>{reportData.deliveredAmount.toLocaleString()} ₽</p></div>
+                </div>
+                <div>
+                  <div><h3>Отменённые заказы</h3><p>{cancelledData.count.toLocaleString()} шт</p><p>{cancelledData.amount.toLocaleString()} ₽</p></div>
+                </div>
+                <div>
+                  <div><h3>Заказы в пути</h3><p>{inTransitData.count.toLocaleString()} шт</p><p>{inTransitData.amount.toLocaleString()} ₽</p></div>
+                </div>
+              </div>
+
+              <div>
+                <div><div>{averageOrderValue.toLocaleString()} ₽</div><div>Средний чек (все заказы)</div></div>
+                <div><div>{averageDeliveredValue.toLocaleString()} ₽</div><div>Средний чек (выкупы)</div></div>
+                <div><div>{deliveryRate}%</div><div>Процент выкупа</div></div>
+              </div>
+
+              {reportData.products.length > 0 && (
+                <div>
+                  <h3>Статистика по товарам (выкупленные)</h3>
+                  <div>
+                    <table>
+                      <thead>
+                        <tr><th>Товар</th><th>Количество</th><th>Сумма</th><th>Средний чек</th></tr>
+                      </thead>
+                      <tbody>
+                        {reportData.products.map((product, idx) => (
+                          <tr key={idx}>
+                            <td>{product.name}</td>
+                            <td>{product.deliveredCount.toLocaleString()} шт</td>
+                            <td>{product.deliveredAmount.toLocaleString()} ₽</td>
+                            <td>{Math.round(product.deliveredAmount / product.deliveredCount).toLocaleString()} ₽</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <button onClick={() => setShowDailyReport(!showDailyReport)}>
+                  {showDailyReport ? "Скрыть отчёт по дням" : "Сформировать отчёт по дням"}
+                </button>
+                <button onClick={() => setShowProfitCalculation(!showProfitCalculation)}>
+                  {showProfitCalculation ? "Скрыть расчёт прибыли" : "Расчёт прибыли"}
+                </button>
+              </div>
+
+              {showProfitCalculation && productProfitData.length > 0 && (
+                <div>
+                  <div><h3>Расчёт прибыли по товарам</h3><div><div>Общая прибыль:</div><div>{totalProfitForPeriod.toFixed(2)} ₽</div></div></div>
+                  <div>
+                    <table>
+                      <thead>
+                        <tr><th>Товар</th><th>Себестоимость</th><th>Логистика</th><th>Вознаграждение Ozon</th><th>НДС</th><th>Прибыль товара</th></tr>
+                      </thead>
+                      <tbody>
+                        {productProfitData.map((product, idx) => (
+                          <tr key={idx}>
+                            <td>{product.productName}</td>
+                            <td><input type="number" step="0.01" value={product.costPrice || ""} onChange={(e) => handleProfitDataChange(product.productName, "costPrice", e.target.value)} placeholder="0" /></td>
+                            <td><input type="number" step="0.01" value={product.logistics || ""} onChange={(e) => handleProfitDataChange(product.productName, "logistics", e.target.value)} placeholder="0" /></td>
+                            <td><input type="number" step="0.01" value={product.ozonRewardPercent || ""} onChange={(e) => handleProfitDataChange(product.productName, "ozonRewardPercent", e.target.value)} placeholder="20" />%</td>
+                            <td><input type="number" step="0.01" value={product.taxPercent || ""} onChange={(e) => handleProfitDataChange(product.productName, "taxPercent", e.target.value)} placeholder="6" />%</td>
+                            <td>{product.totalProfit.toFixed(2)} ₽</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button onClick={() => setIsFormulaExpanded(!isFormulaExpanded)}>{isFormulaExpanded ? "Свернуть формулу" : "Раскрыть формулу"}</button>
+                  {isFormulaExpanded && <div><p>Прибыль на единицу = Цена - Себестоимость - Логистика - (Цена × Вознаграждение Ozon%) - (Цена × 1% эквайринг) - (Цена × НДС%)</p></div>}
+                </div>
+              )}
+
+              {showDailyReport && reportData.dailyStats.length > 0 && (
+                <div>
+                  <h3>Отчёт по дням</h3>
+                  {reportData.dailyStats.map((day, idx) => (
+                    <div key={idx}>
+                      <div><h4>Дата: {day.date}</h4></div>
+                      <div>
+                        <div>
+                          <div><div>{day.orderedCount} шт</div><div>Заказано</div><div>{day.orderedAmount.toLocaleString()} ₽</div></div>
+                          <div><div>{day.deliveredCount} шт</div><div>Доставлено</div><div>{day.deliveredAmount.toLocaleString()} ₽</div></div>
+                          <div><div>{day.cancelledCount} шт</div><div>Отменено</div><div>{day.cancelledAmount.toLocaleString()} ₽</div></div>
+                          <div><div>{day.inTransitCount} шт</div><div>В пути</div><div>{day.inTransitAmount.toLocaleString()} ₽</div></div>
+                        </div>
+                        {day.products.length > 0 && (
+                          <div>
+                            <table>
+                              <thead>
+                                <tr><th>Товар</th><th>Доставлено</th><th>Сумма</th><th>Отменено</th><th>Средняя цена</th>{showProfitCalculation && <th>Прибыль</th>}</tr>
+                              </thead>
+                              <tbody>
+                                {day.products.map((product, pi) => {
+                                  const avgPrice = product.deliveredCount > 0 ? product.deliveredAmount / product.deliveredCount : 0;
+                                  const profitPerUnit = calculateProfitForProduct(product.name, avgPrice);
+                                  return (
+                                    <tr key={pi}>
+                                      <td>{product.name}</td>
+                                      <td>{product.deliveredCount} шт</td>
+                                      <td>{product.deliveredAmount.toLocaleString()} ₽</td>
+                                      <td>{product.cancelledCount} шт</td>
+                                      <td>{Math.round(avgPrice).toLocaleString()} ₽</td>
+                                      {showProfitCalculation && <td>{(profitPerUnit * product.deliveredCount).toFixed(2)} ₽</td>}
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div>
+            <h3>Как получить отчёт из Ozon?</h3>
+            <ol>
+              <li>Зайдите в личный кабинет продавца Ozon</li>
+              <li>Перейдите в раздел "Аналитика" → "Отчёты"</li>
+              <li>Перейдите в раздел "Заказы" → "Заказы со складов Ozon"</li>
+              <li>Выберите нужный период и скачайте отчёт</li>
+              <li>Загрузите файл в форму выше</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+\end{minted}
+\end{code}
+
+\begin{code}
+\captionof{listing}{Компонент страницы юнит экономики}
+\label{code:testTS}
+\vspace{-0.75cm}\begin{minted}[mathescape,linenos,frame=lines,breaklines]{JS}
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+
+type LogisticsCalculation = {
+  liters: string;
+  index: number;
+  cost: string;
+  withReception: string;
+  total: string;
+};
+
+export default function OzonUnitEconomics() {
+  const router = useRouter();
+
+  const [exchangeRates, setExchangeRates] = useState({ usd: 0, cny: 0 });
+  const [currencyConversion, setCurrencyConversion] = useState({ usdAmount: 0, cnyAmount: 0 });
+  const [costData, setCostData] = useState({
+    purchaseCost: 0,
+    quantity: 0,
+    chinaShipping: 0,
+    russiaShipping: 0,
+    fulfillment: 0,
+    additionalCosts: 0,
+  });
+  const [marginData, setMarginData] = useState({
+    sellingPrice: 0,
+    ozonRewardPercent: 0,
+    taxPercent: 0,
+  });
+  const [logisticsData, setLogisticsData] = useState({ width: 0, length: 0, height: 0 });
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
+
+  const usdInRubles = currencyConversion.usdAmount * exchangeRates.usd;
+  const cnyInRubles = currencyConversion.cnyAmount * exchangeRates.cny;
+  const totalAdditionalCosts = costData.chinaShipping + costData.russiaShipping + costData.fulfillment + costData.additionalCosts;
+  const totalCost = costData.purchaseCost * costData.quantity + totalAdditionalCosts;
+  const costPerItem = costData.quantity > 0 ? totalCost / costData.quantity : 0;
+
+  const calculateLogistics = (): LogisticsCalculation | null => {
+    if (logisticsData.width <= 0 || logisticsData.length <= 0 || logisticsData.height <= 0) return null;
+    const liters = (logisticsData.width * logisticsData.length * logisticsData.height) / 1000;
+    let index;
+    if (liters <= 0.2) index = 50;
+    else if (liters <= 0.4) index = 55;
+    else if (liters <= 0.6) index = 58;
+    else if (liters <= 0.8) index = 61;
+    else if (liters <= 1) index = 63;
+    else if (liters <= 1.25) index = 71;
+    else if (liters <= 1.5) index = 74;
+    else if (liters <= 1.75) index = 77;
+    else if (liters <= 2) index = 81;
+    else if (liters <= 3) index = 81;
+    else if (liters <= 4) index = 87;
+    else if (liters <= 5) index = 99;
+    else if (liters <= 6) index = 99;
+    else if (liters <= 7) index = 112;
+    else if (liters <= 8) index = 122;
+    else if (liters <= 9) index = 122;
+    else if (liters <= 10) index = 122;
+    else if (liters <= 11) index = 128;
+    else if (liters <= 12) index = 128;
+    else if (liters <= 13) index = 136;
+    else if (liters <= 14) index = 136;
+    else if (liters <= 15) index = 170;
+    else if (liters <= 17) index = 182;
+    else if (liters <= 20) index = 182;
+    else if (liters <= 25) index = 210;
+    else index = 210;
+    const logisticsCost = liters * index;
+    const logisticsWithReception = logisticsCost + 25;
+    const totalLogistics = logisticsWithReception * 1.1;
+    return { liters: liters.toFixed(2), index, cost: logisticsCost.toFixed(2), withReception: logisticsWithReception.toFixed(2), total: totalLogistics.toFixed(2) };
+  };
+
+  const logisticsCalculation = calculateLogistics();
+  const logisticsCost = logisticsCalculation ? parseFloat(logisticsCalculation.total) : 0;
+  const acquiringAmount = marginData.sellingPrice * 0.01;
+  const ozonRewardAmount = (marginData.sellingPrice * marginData.ozonRewardPercent) / 100;
+  const totalExpenses = ozonRewardAmount + acquiringAmount + logisticsCost;
+  const taxAmount = (marginData.sellingPrice * marginData.taxPercent) / 100;
+  const fullCost = costPerItem + totalExpenses + taxAmount;
+  const margin = marginData.sellingPrice - fullCost;
+  const marginPercent = marginData.sellingPrice > 0 ? (margin / marginData.sellingPrice) * 100 : 0;
+  const profitabilityPercent = fullCost > 0 ? (margin / fullCost) * 100 : 0;
+
+  const validateField = (field: string, value: number) => {
+    setValidationErrors(prev => ({ ...prev, [field]: isNaN(value) || value < 0 }));
+    return !(isNaN(value) || value < 0);
+  };
+
+  const handleExchangeRateChange = (currency: "usd" | "cny", value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setExchangeRates(prev => ({ ...prev, [currency]: numValue }));
+    validateField(`${currency}Rate`, numValue);
+  };
+
+  const handleCurrencyConversionChange = (currency: "usdAmount" | "cnyAmount", value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setCurrencyConversion(prev => ({ ...prev, [currency]: numValue }));
+    validateField(currency, numValue);
+  };
+
+  const handleCostDataChange = (field: string, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setCostData(prev => ({ ...prev, [field]: numValue }));
+    validateField(field, numValue);
+  };
+
+  const handleMarginDataChange = (field: string, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setMarginData(prev => ({ ...prev, [field]: numValue }));
+    validateField(field, numValue);
+  };
+
+  const handleLogisticsDataChange = (field: string, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setLogisticsData(prev => ({ ...prev, [field]: numValue }));
+    validateField(field, numValue);
+  };
+
+  useEffect(() => {
+    setExchangeRates({ usd: 92.5, cny: 12.8 });
+  }, []);
+
+  return (
+    <div>
+      <div>
+        <div>
+          <div>
+            <button onClick={() => router.push("/ozon")}>Назад к Ozon</button>
+          </div>
+
+          <div>
+            <div>
+              <h1>Калькулятор юнит-экономики Ozon</h1>
+              <p>Расчёт прибыльности товаров с учётом всех затрат</p>
+            </div>
+          </div>
+
+          <div>
+            <h2>Курсы валют к рублю</h2>
+            <div>
+              <div>
+                <label>Доллар (USD)</label>
+                <input type="number" step="0.01" value={exchangeRates.usd || ""} onChange={(e) => handleExchangeRateChange("usd", e.target.value)} />
+              </div>
+              <div>
+                <label>Юань (CNY)</label>
+                <input type="number" step="0.01" value={exchangeRates.cny || ""} onChange={(e) => handleExchangeRateChange("cny", e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2>Конвертер валют в рубли</h2>
+            <div>
+              <div><label>Доллары (USD)</label><input type="number" step="0.01" value={currencyConversion.usdAmount || ""} onChange={(e) => handleCurrencyConversionChange("usdAmount", e.target.value)} /></div>
+              <div><label>Юани (CNY)</label><input type="number" step="0.01" value={currencyConversion.cnyAmount || ""} onChange={(e) => handleCurrencyConversionChange("cnyAmount", e.target.value)} /></div>
+              <div><div>{usdInRubles + cnyInRubles} ₽</div></div>
+            </div>
+          </div>
+
+          <div>
+            <h2>Расчёт себестоимости</h2>
+            <div>
+              <div><label>Закупочная стоимость (за ед., ₽)</label><input type="number" step="0.01" value={costData.purchaseCost || ""} onChange={(e) => handleCostDataChange("purchaseCost", e.target.value)} /></div>
+              <div><label>Количество штук</label><input type="number" value={costData.quantity || ""} onChange={(e) => handleCostDataChange("quantity", e.target.value)} /></div>
+              <div><label>Доставка по Китаю (₽)</label><input type="number" step="0.01" value={costData.chinaShipping || ""} onChange={(e) => handleCostDataChange("chinaShipping", e.target.value)} /></div>
+              <div><label>Доставка до России (₽)</label><input type="number" step="0.01" value={costData.russiaShipping || ""} onChange={(e) => handleCostDataChange("russiaShipping", e.target.value)} /></div>
+              <div><label>Фулфилмент + упаковка + приёмка (₽)</label><input type="number" step="0.01" value={costData.fulfillment || ""} onChange={(e) => handleCostDataChange("fulfillment", e.target.value)} /></div>
+              <div><label>Дополнительные расходы (₽)</label><input type="number" step="0.01" value={costData.additionalCosts || ""} onChange={(e) => handleCostDataChange("additionalCosts", e.target.value)} /></div>
+            </div>
+            <div>
+              <div><h3>Себестоимость всех товаров:</h3><div>{totalCost.toFixed(2)} ₽</div></div>
+              <div><h3>Себестоимость одного товара:</h3><div>{costPerItem.toFixed(2)} ₽</div></div>
+            </div>
+          </div>
+
+          <div>
+            <h2>Калькулятор логистики Ozon</h2>
+            <p>Введите размеры упаковки в сантиметрах:</p>
+            <div>
+              <div><label>Ширина (см)</label><input type="number" step="0.1" value={logisticsData.width || ""} onChange={(e) => handleLogisticsDataChange("width", e.target.value)} /></div>
+              <div><label>Длина (см)</label><input type="number" step="0.1" value={logisticsData.length || ""} onChange={(e) => handleLogisticsDataChange("length", e.target.value)} /></div>
+              <div><label>Высота (см)</label><input type="number" step="0.1" value={logisticsData.height || ""} onChange={(e) => handleLogisticsDataChange("height", e.target.value)} /></div>
+            </div>
+            {logisticsCalculation && (
+              <div>
+                <h3>Детали расчёта логистики:</h3>
+                <div>
+                  <div>Объем упаковки: {logisticsCalculation.liters} л</div>
+                  <div>Индекс (тариф): {logisticsCalculation.index} ₽/л</div>
+                  <div>Стоимость по тарифу: {logisticsCalculation.cost} ₽</div>
+                  <div>Приёмка ПВЗ: 25 ₽</div>
+                  <div>Итого с приёмкой: {logisticsCalculation.withReception} ₽</div>
+                  <div>+10% (надбавка): {(parseFloat(logisticsCalculation.withReception) * 0.1).toFixed(2)} ₽</div>
+                </div>
+                <div><div>Общая стоимость логистики:</div><div>{logisticsCalculation.total} ₽</div></div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h2>Расчёт маржинальности и рентабельности</h2>
+            <div>
+              <div><label>Цена продажи на Ozon (₽)</label><input type="number" step="0.01" value={marginData.sellingPrice || ""} onChange={(e) => handleMarginDataChange("sellingPrice", e.target.value)} /></div>
+              <div><label>Вознаграждение Ozon (%)</label><input type="number" step="0.01" value={marginData.ozonRewardPercent || ""} onChange={(e) => handleMarginDataChange("ozonRewardPercent", e.target.value)} /></div>
+              <div><label>Эквайринг (автоматически 1%)</label><div>{acquiringAmount.toFixed(2)} ₽</div></div>
+              <div><label>Налог (%)</label><input type="number" step="0.01" value={marginData.taxPercent || ""} onChange={(e) => handleMarginDataChange("taxPercent", e.target.value)} /></div>
+            </div>
+            <div>
+              <table>
+                <thead>
+                  <tr><th>Показатель</th><th>Значение</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Себестоимость одного товара</td><td>{costPerItem.toFixed(2)} ₽</td></tr>
+                  <tr><td>Цена продажи</td><td>{marginData.sellingPrice} ₽</td></tr>
+                  <tr><td>Вознаграждение Ozon ({marginData.ozonRewardPercent}%)</td><td>{ozonRewardAmount.toFixed(2)} ₽</td></tr>
+                  <tr><td>Эквайринг (1%)</td><td>{acquiringAmount.toFixed(2)} ₽</td></tr>
+                  <tr><td>Приёмка + Логистика</td><td>{logisticsCost.toFixed(2)} ₽</td></tr>
+                  <tr><td>Общие расходы</td><td>{totalExpenses.toFixed(2)} ₽</td></tr>
+                  <tr><td>Налог ({marginData.taxPercent}%)</td><td>{taxAmount.toFixed(2)} ₽</td></tr>
+                  <tr><td>Себестоимость full</td><td>{fullCost.toFixed(2)} ₽</td></tr>
+                  <tr><td>Маржинальность</td><td>{margin.toFixed(2)} ₽ ({marginPercent.toFixed(2)}%)</td></tr>
+                  <tr><td>Рентабельность</td><td>{profitabilityPercent.toFixed(2)}%</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>Результат:</h3>
+              {margin >= 0 ? (
+                <div>Товар прибыльный. Маржинальность: {margin.toFixed(2)} ₽ ({marginPercent.toFixed(2)}%)</div>
+              ) : (
+                <div>Товар убыточный. Убыток: {Math.abs(margin).toFixed(2)} ₽</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+\end{minted}
+\end{code}

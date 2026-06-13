@@ -1,0 +1,12 @@
+*~
+*.aux
+*.log
+*.pdf
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.out
+*.highlight.minted
+*.synctex.gz
+*.toc
